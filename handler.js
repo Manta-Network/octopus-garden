@@ -32,7 +32,15 @@ module.exports.circulation = async (event) => {
   const body = {
     chain: {
       name,
-      properties,
+      properties: {
+        ss58: {
+          format: properties.ss58Format,
+        },
+        token: {
+          decimals: properties.tokenDecimals[0],
+          symbol: properties.tokenSymbol[0],
+        },
+      },
       version,
       genesis,
     },
