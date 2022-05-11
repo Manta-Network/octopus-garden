@@ -14,9 +14,10 @@ const address = {
 
 module.exports.circulation = async (event) => {
   const api = await ApiPromise.create({ provider: wsProvider });
-  const [chain, name, version] = await Promise.all([
+  const [name, version, properties] = await Promise.all([
     api.rpc.system.chain(),
     api.rpc.system.version(),
+    api.registry.getChainProperties(),
   ]);
   const genesis = api.genesisHash.toHex();
   const queuedKeys = await api.query.session.queuedKeys();
@@ -29,12 +30,13 @@ module.exports.circulation = async (event) => {
     .subtract(treasurySum)
     .subtract(bondedSum);
   const body = {
-    token: {
-      chain,
+    chain: {
+      name,
+      properties,
       version,
-      symbol: 'KMA',
-      decimals: 12,
       genesis,
+    },
+    token: {
       distribution: {
         vested: {
           note: "not implemented",
