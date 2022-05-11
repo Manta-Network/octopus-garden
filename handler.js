@@ -16,7 +16,6 @@ module.exports.circulation = async (event) => {
   const api = await ApiPromise.create({ provider: wsProvider });
   const [chain, name, version] = await Promise.all([
     api.rpc.system.chain(),
-    api.rpc.system.name(),
     api.rpc.system.version(),
   ]);
   const genesis = api.genesisHash.toHex();
@@ -32,7 +31,6 @@ module.exports.circulation = async (event) => {
   const body = {
     token: {
       chain,
-      name,
       version,
       symbol: 'KMA',
       decimals: 12,
