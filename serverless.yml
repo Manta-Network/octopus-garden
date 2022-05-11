@@ -1,0 +1,24 @@
+service: octopus-garden
+
+frameworkVersion: '2'
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  stage: prod
+  profile: pelagos-service
+  region: eu-central-1
+  lambdaHashingVersion: 20201221
+
+plugins:
+  - serverless-offline
+
+functions:
+  circulation:
+    handler: handler.circulation
+    events:
+      -
+        http: 
+          path: circulation
+          method: get
+          cors: true

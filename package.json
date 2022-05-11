@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "@polkadot/api": "^8.3.2",
+    "big-integer": "^1.6.51",
+    "dotenv": "^16.0.1"
+  },
+  "devDependencies": {
+    "serverless-offline": "^8.7.0"
+  }
+}
