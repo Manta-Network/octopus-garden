@@ -14,13 +14,13 @@ const address = {
 
 module.exports.circulation = async (event) => {
   const api = await ApiPromise.create({ provider: wsProvider });
-  const [name, version, properties] = await Promise.all([
+  const genesis = api.genesisHash.toHex();
+  const [name, version, properties, queuedKeys] = await Promise.all([
     api.rpc.system.chain(),
     api.rpc.system.version(),
     api.registry.getChainProperties(),
+    api.query.session.queuedKeys(),
   ]);
-  const genesis = api.genesisHash.toHex();
-  const queuedKeys = await api.query.session.queuedKeys();
   const totalIssuance = new bigInt(await api.query.balances.totalIssuance(), 16);
   const balances = await api.query.system.account.multi([...[address.treasury], ...queuedKeys.map((qk) => qk[0])]);
   const bondedCollatorBalances = balances.filter(x => !!x.data.reserved);
@@ -32,55 +32,45 @@ module.exports.circulation = async (event) => {
   const body = {
     chain: {
       name,
-      properties: {
-        ss58: {
-          format: properties.ss58Format,
-        },
-        token: {
-          decimals: properties.tokenDecimals[0],
-          symbol: properties.tokenSymbol[0],
-        },
-      },
+      properties,
       version,
       genesis,
     },
-    token: {
-      distribution: {
-        vested: {
-          note: "not implemented",
-          account: {
-            count: 0,
-            balance: {
-              sum: 0,
-            },
+    distribution: {
+      vested: {
+        note: "not implemented",
+        account: {
+          count: 0,
+          balance: {
+            sum: 0,
           },
         },
-        bonded: {
-          account: {
-            count: bondedCollatorBalances.length,
-            balance: {
-              sum: bondedSum,
-            },
+      },
+      bonded: {
+        account: {
+          count: bondedCollatorBalances.length,
+          balance: {
+            sum: bondedSum,
           },
         },
-        treasury: {
-          account: {
-            count: 1,
-            balance: {
-              sum: treasurySum,
-            },
+      },
+      treasury: {
+        account: {
+          count: 1,
+          balance: {
+            sum: treasurySum,
           },
         },
-        circulation: {
-          account: {
-            //count: 0,
-            balance: {
-              sum: circulationSum,
-            },
+      },
+      circulation: {
+        account: {
+          //count: 0,
+          balance: {
+            sum: circulationSum,
           },
         },
-      }
-    }
+      },
+    },
   };
   return {
     ...response,
