@@ -89,14 +89,7 @@ module.exports.circulation = async (event) => {
           },
         },
       },
-      circulation: {
-        account: {
-          //count: 0,
-          balance: {
-            sum: circulationSum,
-          },
-        },
-      },
+      circulation: circulationSum,
     },
   };
   return {
