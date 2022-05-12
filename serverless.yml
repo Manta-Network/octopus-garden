@@ -13,12 +13,27 @@ provider:
 plugins:
   - serverless-offline
 
+package:
+  excludeDevDependencies: false
+
 functions:
   circulation:
+    memorySize: 1024
+    timeout: 29
     handler: handler.circulation
     events:
       -
         http: 
           path: circulation
+          method: get
+          cors: true
+  accounts:
+    memorySize: 1024
+    timeout: 29
+    handler: handler.accounts
+    events:
+      -
+        http: 
+          path: accounts
           method: get
           cors: true
