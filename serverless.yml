@@ -27,13 +27,13 @@ functions:
           path: circulation
           method: get
           cors: true
-  accounts:
+  vested:
     memorySize: 1024
     timeout: 29
-    handler: handler.accounts
+    handler: handler.vested
     events:
       -
         http: 
-          path: accounts
+          path: balances/vested
           method: get
           cors: true
