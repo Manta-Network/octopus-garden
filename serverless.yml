@@ -9,6 +9,21 @@ provider:
   profile: pelagos-service
   region: eu-central-1
   lambdaHashingVersion: 20201221
+  iam:
+    role:
+      name: octopus-garden
+      # https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-access.html
+      statements:
+        -
+          Effect: Allow
+          Action:
+            - 'ssm:DescribeParameters'
+          Resource: '*'
+        -
+          Effect: Allow
+          Action:
+            - 'ssm:GetParameter'
+          Resource: 'arn:aws:ssm:eu-central-1::parameter/octopus_garden_*'
 
 plugins:
   - serverless-offline
@@ -21,6 +36,12 @@ functions:
     memorySize: 1024
     timeout: 29
     handler: handler.circulation
+    environment:
+      # https://www.serverless.com/blog/aws-secrets-management
+      # https://www.serverless.com/framework/docs/providers/aws/guide/variables#reference-variables-using-the-ssm-parameter-store
+      # https://eu-central-1.console.aws.amazon.com/systems-manager/parameters
+      vested_count: ${ssm:/octopus_garden_vested_count}
+      vested_sum: ${ssm:/octopus_garden_vested_sum}
     events:
       -
         http: 

@@ -79,7 +79,7 @@ module.exports.circulation = async (event) => {
 
     const vestedSum = vestedBalances.reduce((a, b) => a + BigInt(b.data.miscFrozen), BigInt(0));
     */
-    const vestedSum = BigInt("1253870932248133540291");
+    const vestedSum = BigInt(process.env.vested_sum);
     const treasurySum = BigInt(balances[0].data.free);
     const bondedSum = bondedCollatorBalances.map(x => BigInt(x.data.reserved)).reduce((a, i) => a + i, BigInt(0));
     const circulationSum = totalIssuance - treasurySum - bondedSum - vestedSum;
@@ -99,7 +99,7 @@ module.exports.circulation = async (event) => {
       distribution: {
         vested: {
           account: {
-            count: 16184,
+            count: parseInt(process.env.vested_count),
             balance: {
               sum: vestedSum,
             },
