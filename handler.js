@@ -127,7 +127,8 @@ module.exports.circulation = async (event) => {
     };
     response.statusCode = 200;
     response.body = JSON.stringify(
-      body,
+      //body,
+      circulationSum,
       (k, v) => (typeof v === 'bigint') ? v.toString() : v,
       2
     );
