@@ -5,6 +5,8 @@ const { ApiPromise, WsProvider } = require("@polkadot/api");
 let vestedBalances = [];
 let vestedCount;
 
+// aws ssm put-parameter --profile pelagos-service --region eu-central-1 --name octopus_garden_vested_count --type String --overwrite --value 16182
+
 exec(
   [
     'aws ssm get-parameter',

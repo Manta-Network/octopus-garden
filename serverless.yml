@@ -29,32 +29,16 @@ plugins:
   - serverless-offline
 
 package:
-  excludeDevDependencies: false
+  excludeDevDependencies: true
 
 functions:
   circulation:
     memorySize: 1024
     timeout: 29
     handler: handler.circulation
-    environment:
-      # https://www.serverless.com/blog/aws-secrets-management
-      # https://www.serverless.com/framework/docs/providers/aws/guide/variables#reference-variables-using-the-ssm-parameter-store
-      # https://eu-central-1.console.aws.amazon.com/systems-manager/parameters
-      vested_count: ${ssm:/octopus_garden_vested_count}
-      vested_sum: ${ssm:/octopus_garden_vested_sum}
     events:
       -
         http: 
           path: circulation
-          method: get
-          cors: true
-  vested:
-    memorySize: 1024
-    timeout: 29
-    handler: handler.vested
-    events:
-      -
-        http: 
-          path: balances/vested
           method: get
           cors: true
