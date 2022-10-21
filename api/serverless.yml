@@ -38,7 +38,35 @@ functions:
     handler: handler.circulation
     events:
       -
-        http: 
+        http:
           path: circulation
+          method: get
+          cors: true
+  candidatePool:
+    handler: collation.list
+    events:
+      -
+        http:
+          path: collators
+          method: get
+          cors: true
+  candidateInfo:
+    handler: collation.info
+    events:
+      -
+        http:
+          path: collator/{account}/info
+          method: get
+          cors: true
+          request:
+            parameters:
+               paths:
+                 account: true
+  stakingRound:
+    handler: collation.round
+    events:
+      -
+        http:
+          path: staking/round
           method: get
           cors: true
