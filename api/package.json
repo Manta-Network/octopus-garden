@@ -6,7 +6,7 @@
     "node-fetch": "2"
   },
   "devDependencies": {
-    "serverless": "2",
+    "serverless": "3",
     "serverless-offline": "8"
   }
 }

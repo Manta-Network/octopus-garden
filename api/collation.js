@@ -15,11 +15,25 @@ const response = {
 module.exports.list = async (event) => {
   try {
     const api = await ApiPromise.create({ provider: wsProvider });
-    const candidatePool = await api.query.parachainStaking.candidatePool();
-    const collators = candidatePool.map((c) => ({
-      account: c.owner,
-      stake: c.amount,
-    }));
+    const [
+      candidatePool,
+      //selectedCandidates,
+      auraAuthorities,
+    ] = await Promise.all([
+      api.query.parachainStaking.candidatePool(),
+      //api.query.parachainStaking.selectedCandidates(),
+      api.query.aura.authorities(),
+    ]);
+    const sessionKeys = await Promise.all(candidatePool.map(cp => api.query.session.nextKeys(cp.owner)));
+    const collators = candidatePool.map((c, cI) => {
+      const session = JSON.parse(JSON.stringify(sessionKeys[cI]));
+      return {
+        account: c.owner,
+        stake: c.amount,
+        collating: !!session.aura && auraAuthorities.includes(session.aura.toString()),
+        session,
+      };
+    });
     response.statusCode = 200;
     response.body = JSON.stringify(
       {

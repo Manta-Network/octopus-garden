@@ -36,7 +36,10 @@ function CollatorList() {
                 <thead>
                   <tr>
                     <th>
-                      collator ({collators.length})
+                      candidate ({collators.length})
+                    </th>
+                    <th>
+                      status ({collators.filter((c)=>c.collating).length}/{collators.length})
                     </th>
                     <th style={{ textAlign: 'right' }}>
                       bond
