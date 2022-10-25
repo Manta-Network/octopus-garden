@@ -1,14 +1,9 @@
 'use strict';
 
 const { ApiPromise, WsProvider } = require("@polkadot/api");
-const { encodeAddress } = require("@polkadot/keyring");
-const { extractAuthor } = require('@polkadot/api-derive/type/util');
-
+//const { encodeAddress } = require("@polkadot/keyring");
 const { Author } = require('@polkadot/types/interfaces');
-
-
 const wsProvider = new WsProvider('wss://ws.archive.calamari.systems');
-
 const response = {
   headers: {
     'Access-Control-Allow-Origin': '*',
@@ -74,25 +69,34 @@ module.exports.info = async (event) => {
 module.exports.round = async (event) => {
   try {
     const api = await ApiPromise.create({ provider: wsProvider });
-    const round = await api.query.parachainStaking.round();
-    const hash = await api.rpc.chain.getBlockHash(round.first);
-    const header = await api.derive.chain.getHeader(hash);
-    const digest = JSON.parse(JSON.stringify(header.digest.logs)).reduce((a, e)=>({ ...a, [Object.keys(e)[0]]: e[Object.keys(e)[0]][1]}), {});
+    const [
+      round,
+      lastHeader,
+      selectedCandidates,
+    ] = await Promise.all([
+      api.query.parachainStaking.round(),
+      api.rpc.chain.getHeader(),
+      api.query.parachainStaking.selectedCandidates(),
+    ]);
+    const max = selectedCandidates.length * 4;
+    let first = parseInt(round.first, 10);
+    const last = parseInt(lastHeader.number, 10);
+    if ((last - first + 1) > max) {
+      first = last - max -1
+    }
+    const hashes = await Promise.all([...Array((last - first + 1)).keys()].map((i) => api.rpc.chain.getBlockHash(i + first)));
+    const blocks = (await Promise.all(hashes.map((h) => api.derive.chain.getHeader(h)))).map((header, i) => ({
+      number: header.number,
+      hash: hashes[i],
+      author: JSON.parse(JSON.stringify(header.digest.logs)).reduce((a, e)=>({ ...a, [Object.keys(e)[0]]: e[Object.keys(e)[0]][1]}), {}).preRuntime,
+    }));
     response.statusCode = 200;
     response.body = JSON.stringify(
       {
         round: {
           current: parseInt(round.current, 10),
-          first: {
-            number: header.number,
-            hash,
-            digest,
-            author: {
-              comment: "ignore this id. it's not correct.",
-              account: encodeAddress(digest.preRuntime, 78),
-            }
-          },
-          length: parseInt(round.length, 10),
+          blocks,
+          //length: parseInt(round.length, 10),
         },
       },
       2

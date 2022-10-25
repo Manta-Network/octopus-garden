@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import Spinner from 'react-bootstrap/Spinner';
 import Table from 'react-bootstrap/Table';
 import CollatorSummary from './CollatorSummary';
 
@@ -27,16 +28,34 @@ function CollatorList() {
         console.error(error);
       });
   }, [sort]);
+  const [blocks, setBlocks] = useState(undefined);
+  useEffect(() => {
+    fetch(`https://81y8y0uwx8.execute-api.eu-central-1.amazonaws.com/prod/staking/round`)
+      .then(response => response.json())
+      .then((container) => {
+        if (!!container.error) {
+          console.error(container.error);
+        } else {
+          setBlocks(container.round.blocks);
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  }, []);
   return (
     <div>
       {
-        !!collators
+        (!!collators && !!blocks)
           ? (
               <Table striped bordered hover>
                 <thead>
                   <tr>
                     <th>
                       candidate ({collators.length})
+                    </th>
+                    <th>
+                      blocks in last {blocks.length}
                     </th>
                     <th>
                       status ({collators.filter((c)=>c.collating).length}/{collators.length})
@@ -56,11 +75,15 @@ function CollatorList() {
                   </tr>
                 </thead>
                 <tbody>
-                  { collators.map((collator, cI) => (<CollatorSummary key={cI} {...collator} />)) }
+                  { collators.map((collator, cI) => (<CollatorSummary key={cI} {...collator} {...{ blocks: { authored: blocks.filter(b => b.author === collator.session.nimbus), count: blocks.length }, collators: { count: collators.length } }} />)) }
                 </tbody>
               </Table>
             )
-          : null
+          : (
+              <Spinner animation="grow" variant="secondary" size="sm">
+                <span className="visually-hidden">candidate lookup in progress...</span>
+              </Spinner>
+            )
       }
     </div>
   );

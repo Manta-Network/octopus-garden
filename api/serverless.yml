@@ -63,6 +63,7 @@ functions:
                paths:
                  account: true
   stakingRound:
+    timeout: 29
     handler: collation.round
     events:
       -
@@ -70,3 +71,7 @@ functions:
           path: staking/round
           method: get
           cors: true
+          request:
+            parameters:
+               paths:
+                 seek: false
