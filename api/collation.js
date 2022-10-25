@@ -82,7 +82,7 @@ module.exports.round = async (event) => {
     let first = parseInt(round.first, 10);
     const last = parseInt(lastHeader.number, 10);
     if ((last - first + 1) > max) {
-      first = last - max -1
+      first = last - max + 1
     }
     const hashes = await Promise.all([...Array((last - first + 1)).keys()].map((i) => api.rpc.chain.getBlockHash(i + first)));
     const blocks = (await Promise.all(hashes.map((h) => api.derive.chain.getHeader(h)))).map((header, i) => ({
