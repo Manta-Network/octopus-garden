@@ -3,6 +3,10 @@
 const { ApiPromise, WsProvider } = require("@polkadot/api");
 const { encodeAddress } = require("@polkadot/keyring");
 const { extractAuthor } = require('@polkadot/api-derive/type/util');
+
+const { Author } = require('@polkadot/types/interfaces');
+
+
 const wsProvider = new WsProvider('wss://ws.archive.calamari.systems');
 
 const response = {
@@ -17,23 +21,21 @@ module.exports.list = async (event) => {
     const api = await ApiPromise.create({ provider: wsProvider });
     const [
       candidatePool,
-      //selectedCandidates,
-      auraAuthorities,
+      selectedCandidates,
+      sessionValidators,
     ] = await Promise.all([
       api.query.parachainStaking.candidatePool(),
-      //api.query.parachainStaking.selectedCandidates(),
-      api.query.aura.authorities(),
+      api.query.parachainStaking.selectedCandidates(),
+      api.query.session.validators(),
     ]);
     const sessionKeys = await Promise.all(candidatePool.map(cp => api.query.session.nextKeys(cp.owner)));
-    const collators = candidatePool.map((c, cI) => {
-      const session = JSON.parse(JSON.stringify(sessionKeys[cI]));
-      return {
-        account: c.owner,
-        stake: c.amount,
-        collating: !!session.aura && auraAuthorities.includes(session.aura.toString()),
-        session,
-      };
-    });
+    const collators = candidatePool.map((c, cI) => ({
+      account: c.owner,
+      stake: c.amount,
+      selected: selectedCandidates.includes(c.owner),
+      collating: sessionValidators.includes(c.owner),
+      session: JSON.parse(JSON.stringify(sessionKeys[cI])),
+    }));
     response.statusCode = 200;
     response.body = JSON.stringify(
       {
@@ -73,17 +75,25 @@ module.exports.round = async (event) => {
   try {
     const api = await ApiPromise.create({ provider: wsProvider });
     const round = await api.query.parachainStaking.round();
-    const blockHash = await api.rpc.chain.getBlockHash(round.first);
-    const header = await api.derive.chain.getHeader(blockHash);
-    const preRuntime = JSON.parse(JSON.stringify(header.digest.logs[0])).preRuntime[1];
-    const author = encodeAddress(preRuntime, 78);
+    const hash = await api.rpc.chain.getBlockHash(round.first);
+    const header = await api.derive.chain.getHeader(hash);
+    const digest = JSON.parse(JSON.stringify(header.digest.logs)).reduce((a, e)=>({ ...a, [Object.keys(e)[0]]: e[Object.keys(e)[0]][1]}), {});
     response.statusCode = 200;
     response.body = JSON.stringify(
       {
-        round,
-        preRuntime,
-        blockHash,
-        header,
+        round: {
+          current: parseInt(round.current, 10),
+          first: {
+            number: header.number,
+            hash,
+            digest,
+            author: {
+              comment: "ignore this id. it's not correct.",
+              account: encodeAddress(digest.preRuntime, 78),
+            }
+          },
+          length: parseInt(round.length, 10),
+        },
       },
       2
     );
