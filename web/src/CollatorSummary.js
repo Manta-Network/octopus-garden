@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import Spinner from 'react-bootstrap/Spinner';
+import Identicon from '@polkadot/react-identicon';
 
 function CollatorSummary(props) {
   const { account, stake, collating, selected, session, blocks, score, sort } = props;
@@ -21,7 +22,10 @@ function CollatorSummary(props) {
   return (
     <tr>
       <td>
-        { account }
+        <Identicon value={account} size={24} theme={`substrate`} />
+        <code style={{marginLeft: '0.5em', color: '#ffffff'}}>
+          { account }
+        </code>
       </td>
       <td style={{ textAlign: 'right' }}>
         { [...Array(Math.round(score * 100 / 20)).keys()].map(() => (
