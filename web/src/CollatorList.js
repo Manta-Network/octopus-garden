@@ -15,12 +15,15 @@ function CollatorList() {
           if (!!container.error) {
             console.error(container.error);
           } else {
-            setCollators(container.collators.map((c) => ({
-              ...c,
-              sort: (!!c.blocks.length)
-                ? c.blocks.map(b => b.number).reduce((a, b) => Math.max(a, b), -Infinity)
-                : -1
-            })).sort((a, b) => (a.sort > b.sort) ? 1 : (a.sort < b.sort) ? -1 : 0).reverse());
+            const highestAuthorCount = container.collators.map(c => c.blocks.length).reduce((a, b) => Math.max(a, b), -Infinity);
+            setCollators(container.collators.map((c) => {
+              const sort = (!!c.blocks.length) ? c.blocks.map(b => b.number).reduce((a, b) => Math.max(a, b), -Infinity) : -1;
+              return {
+                ...c,
+                sort,
+                score: (c.blocks.length / highestAuthorCount),
+              };
+            }).sort((a, b) => (a.sort > b.sort) ? 1 : (a.sort < b.sort) ? -1 : 0).reverse());
           }
         })
         .catch((error) => {
