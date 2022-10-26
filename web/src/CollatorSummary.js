@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import Spinner from 'react-bootstrap/Spinner';
 
 function CollatorSummary(props) {
-  const { account, stake, collating, selected, session, blocks } = props;
+  const { account, stake, collating, selected, session, blocks, sort } = props;
   const [candidateInfo, setCandidateInfo] = useState(undefined);
   useEffect(() => {
     fetch(`https://81y8y0uwx8.execute-api.eu-central-1.amazonaws.com/prod/collator/${account}/info`)
@@ -23,19 +23,24 @@ function CollatorSummary(props) {
       <td>
         { account }
       </td>
-      <td>
-        { blocks.authored.length }
+      <td style={{ textAlign: 'right' }}>
+        { blocks.length }
       </td>
       <td>
         {
-          (selected)
-            ? (collating)
-              ? (
-                  <span>collating</span>
-                )
-              : (
-                  <span>selected</span>
-                )
+          (sort > 0)
+            ? (
+                <span>{ sort }</span>
+              )
+            : null
+        }
+      </td>
+      <td>
+        {
+          (!!blocks.length)
+            ? (
+                <span>collating</span>
+              )
             : (
                 <span>waiting</span>
               )

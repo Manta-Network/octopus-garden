@@ -27,6 +27,7 @@ provider:
 
 plugins:
   - serverless-offline
+useDotenv: true
 
 package:
   excludeDevDependencies: true
@@ -43,6 +44,9 @@ functions:
           method: get
           cors: true
   candidatePool:
+    timeout: 29
+    environment:
+      octopus_garden_db_read: ${ssm:/octopus_garden_db_read}
     handler: collation.list
     events:
       -
@@ -51,6 +55,9 @@ functions:
           method: get
           cors: true
   candidateInfo:
+    timeout: 29
+    environment:
+      octopus_garden_db_read: ${ssm:/octopus_garden_db_read}
     handler: collation.info
     events:
       -
@@ -64,6 +71,8 @@ functions:
                  account: true
   stakingRound:
     timeout: 29
+    environment:
+      octopus_garden_db_read: ${ssm:/octopus_garden_db_read}
     handler: collation.round
     events:
       -
@@ -71,7 +80,12 @@ functions:
           path: staking/round
           method: get
           cors: true
+      -
+        http:
+          path: staking/round/{round}
+          method: get
+          cors: true
           request:
             parameters:
                paths:
-                 seek: false
+                 round: false
