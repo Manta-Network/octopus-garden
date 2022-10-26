@@ -60,7 +60,7 @@ function CollatorList() {
                       {
                         (!!round)
                           ? (
-                              <span style={{marginRight: '0.5em'}}>
+                              <span style={{marginLeft: '0.5em'}}>
                                 (of {round.blocks.length} in round)
                               </span>
                             )
