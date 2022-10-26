@@ -1,0 +1,18 @@
+{
+  "name": "observer",
+  "version": "0.0.1",
+  "description": "observe block authors",
+  "type": "module",
+  "main": "index.js",
+  "repository": "https://github.com/Manta-Network/octopus-garden",
+  "author": "rob thijssen <mail@rob.tn>",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@polkadot/api": "^9.6.1",
+    "mongodb": "^4.11.0"
+  }
+}
