@@ -28,8 +28,8 @@ function CollatorSummary(props) {
         </code>
       </td>
       <td style={{ textAlign: 'right' }}>
-        { [...Array(Math.round(score * 100 / 20)).keys()].map(() => (
-          <span>⭐</span>
+        { [...Array(Math.round(score * 100 / 20)).keys()].map((_, i) => (
+          <span key={i}>⭐</span>
         )) } { blocks.length }
       </td>
       <td>
