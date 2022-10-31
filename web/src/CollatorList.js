@@ -6,7 +6,7 @@ import CollatorSummary from './CollatorSummary';
 function CollatorList() {
   const [collators, setCollators] = useState(undefined);
   const [sort, setSort] = useState({ column: 'account', ascending: true });
-  const [round, setROund] = useState(undefined);
+  const [blockHeight, setBlockHeight] = useState(undefined);
   useEffect(() => {
     const interval = setInterval(() => {
       fetch(`https://81y8y0uwx8.execute-api.eu-central-1.amazonaws.com/prod/collators`)
@@ -16,26 +16,17 @@ function CollatorList() {
             console.error(container.error);
           } else {
             const highestAuthorCount = container.collators.map(c => c.blocks.length).reduce((a, b) => Math.max(a, b), -Infinity);
-            setCollators(container.collators.map((c) => {
+            const lowestAuthorCount = container.collators.map(c => c.blocks.length).reduce((a, b) => Math.min(a, b), Infinity);
+            const collators = container.collators.map((c) => {
               const sort = (!!c.blocks.length) ? c.blocks.map(b => b.number).reduce((a, b) => Math.max(a, b), -Infinity) : -1;
               return {
                 ...c,
                 sort,
-                score: (c.blocks.length / highestAuthorCount),
+                score: ((c.blocks.length - lowestAuthorCount) / (highestAuthorCount - lowestAuthorCount)),
               };
-            }).sort((a, b) => (a.sort > b.sort) ? 1 : (a.sort < b.sort) ? -1 : 0).reverse());
-          }
-        })
-        .catch((error) => {
-          console.error(error);
-        });
-      fetch(`https://81y8y0uwx8.execute-api.eu-central-1.amazonaws.com/prod/staking/round`)
-        .then(response => response.json())
-        .then((container) => {
-          if (!!container.error) {
-            console.error(container.error);
-          } else {
-            setROund(container.round);
+            }).sort((a, b) => (a.sort > b.sort) ? 1 : (a.sort < b.sort) ? -1 : 0).reverse();
+            setBlockHeight(collators.map(c => c.sort).reduce((a, b) => Math.max(a, b), -Infinity));
+            setCollators(collators);
           }
         })
         .catch((error) => {
@@ -55,22 +46,22 @@ function CollatorList() {
                     <th>
                       candidate ({collators.length})
                     </th>
-                    <th>
+                    <th style={{ textAlign: 'right' }}>
                       authored
+                    </th>
+                    <th style={{ textAlign: 'right' }}>
+                      block
                       {
-                        (!!round)
+                        (!!blockHeight)
                           ? (
                               <span style={{marginLeft: '0.5em'}}>
-                                (of {round.blocks.length} in round)
+                                ({blockHeight})
                               </span>
                             )
                           : null
                       }
                     </th>
-                    <th>
-                      last block
-                    </th>
-                    <th>
+                    <th style={{ textAlign: 'right' }}>
                       status ({collators.filter((c)=>c.collating).length}/{collators.length})
                     </th>
                     <th style={{ textAlign: 'right' }}>
@@ -80,7 +71,7 @@ function CollatorList() {
                       stakers
                     </th>
                     <th style={{ textAlign: 'right' }}>
-                      lowest qualifying stake
+                      lowest stake
                     </th>
                     <th style={{ textAlign: 'right' }}>
                       total stake
@@ -93,9 +84,11 @@ function CollatorList() {
               </Table>
             )
           : (
-              <Spinner animation="grow" variant="dark" size="sm">
-                <span className="visually-hidden">candidate lookup in progress...</span>
-              </Spinner>
+              <div className="d-flex align-items-center justify-content-center" style={{width: '100%', height: '600px'}}>
+                <Spinner animation="border" variant="light">
+                  <span className="visually-hidden">candidate lookup in progress...</span>
+                </Spinner>
+              </div>
             )
       }
     </div>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import Spinner from 'react-bootstrap/Spinner';
 import Identicon from '@polkadot/react-identicon';
 
@@ -28,11 +29,15 @@ function CollatorSummary(props) {
         </code>
       </td>
       <td style={{ textAlign: 'right' }}>
-        { [...Array(Math.round(score * 100 / 20)).keys()].map((_, i) => (
-          <span key={i}>⭐</span>
-        )) } { blocks.length }
+        {
+          (!!blocks.length && !!(score * 100 / 20))
+            ? [...Array(Math.round(score * 100 / 20)).keys()].map((_, i) => (
+                <span key={i}>⭐</span>
+              ))
+            : <span>💤</span>
+        } { blocks.length }
       </td>
-      <td>
+      <td style={{ textAlign: 'right' }}>
         {
           (sort > 0)
             ? (
@@ -41,7 +46,7 @@ function CollatorSummary(props) {
             : null
         }
       </td>
-      <td>
+      <td style={{ textAlign: 'right' }}>
         {
           (!!blocks.length)
             ? (

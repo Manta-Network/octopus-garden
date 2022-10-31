@@ -1,5 +1,5 @@
-html {
-  background-color: #000000;
+#root, html {
+  background-color: #212529;
 }
 
 body {
@@ -13,4 +13,10 @@ body {
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+
+.progress-custom {
+  background-color: purple;
+  color: white;
 }

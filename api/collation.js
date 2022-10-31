@@ -89,14 +89,19 @@ module.exports.info = async (event) => {
 module.exports.round = async (event) => {
   try {
     const api = await ApiPromise.create({ provider: wsProvider });
-    const round = parseInt(((!!event.pathParameters && !!event.pathParameters.round) ? event.pathParameters.round : (await api.query.parachainStaking.round()).current), 10);
+    const [ currentRound, latestHeader ] = await Promise.all([
+      api.query.parachainStaking.round(),
+      api.rpc.chain.getHeader(),
+    ]);
     response.statusCode = 200;
     response.body = JSON.stringify(
       {
         round: {
-          current: round,
-          blocks: (await fetchBlocks(round)),
-        },
+          number: parseInt(currentRound.current, 10),
+          length: parseInt(currentRound.length, 10),
+          first: parseInt(currentRound.first, 10),
+          latest: parseInt(latestHeader.number, 10),
+        }
       },
       2
     );
