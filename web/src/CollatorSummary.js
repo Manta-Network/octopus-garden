@@ -31,8 +31,10 @@ function CollatorSummary(props) {
       <td style={{ textAlign: 'right' }}>
         {
           (!!blocks.length && !!(score * 100 / 20))
-            ? [...Array(Math.round(score * 100 / 20)).keys()].map((_, i) => (
-                <span key={i}>⭐</span>
+            ? [...Array(Math.min(Math.round(score * 100 / 20), 5)).keys()].map((_, i) => (
+                <span key={i}>
+                  {(score > 1) ? `🌟` : `⭐`}
+                </span>
               ))
             : <span>💤</span>
         } { blocks.length }
@@ -41,7 +43,9 @@ function CollatorSummary(props) {
         {
           (sort > 0)
             ? (
-                <span>{ sort }</span>
+                <a href={`https://calamari.subscan.io/block/${sort}`} target="_blank" style={{color: '#e83e8c', textDecoration: 'none'}}>
+                  { sort }
+                </a>
               )
             : null
         }

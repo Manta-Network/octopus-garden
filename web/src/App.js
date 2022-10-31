@@ -44,7 +44,7 @@ function App() {
           <Navbar.Brand as={Link} to={`/`}>
             sparta
             <span style={{fontSize: 'smaller', verticalAlign: 'sub', marginLeft: '0.5em'}}>
-              a collator proving ground
+              a calamari collator proving ground
             </span>
           </Navbar.Brand>
           <Navbar.Toggle />

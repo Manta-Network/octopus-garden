@@ -28,12 +28,10 @@ module.exports.list = async (event) => {
     const [
       candidatePool,
       selectedCandidates,
-      sessionValidators,
       round,
     ] = await Promise.all([
       api.query.parachainStaking.candidatePool(),
       api.query.parachainStaking.selectedCandidates(),
-      api.query.session.validators(),
       api.query.parachainStaking.round(),
     ]);
     const [ sessionKeys, blocks ] = await Promise.all([
@@ -46,7 +44,7 @@ module.exports.list = async (event) => {
         account: c.owner,
         stake: c.amount,
         selected: selectedCandidates.includes(c.owner),
-        collating: sessionValidators.includes(c.owner),
+        collating: blocks.some((b) => b.author === session.nimbus),
         session,
         blocks: blocks.filter((b) => b.author === session.nimbus),
       }
