@@ -80,14 +80,9 @@ function App() {
       </Navbar>
       <Row>
         <Routes>
-          <Route path='/' element={
-            <CollatorList />
-          } />
-          <Route path='/:collator/performance' element={
-            <Collator />
-          } />
+          <Route path='/' element={ <CollatorList /> } />
+          <Route path='/collator/:account' element={ <Collator /> } />
         </Routes>
-        
       </Row>
     </Container>
     

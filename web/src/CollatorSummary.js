@@ -23,10 +23,12 @@ function CollatorSummary(props) {
   return (
     <tr>
       <td>
-        <Identicon value={account} size={24} theme={`substrate`} />
-        <code style={{marginLeft: '0.5em', color: '#ffffff'}}>
-          { account }
-        </code>
+        <Link to={`/collator/${account}`} style={{color: '#e83e8c', textDecoration: 'none'}}>
+          <Identicon value={account} size={24} theme={`substrate`} />
+          <code style={{marginLeft: '0.5em'}}>
+            { account }
+          </code>
+        </Link>
       </td>
       <td style={{ textAlign: 'right' }}>
         {

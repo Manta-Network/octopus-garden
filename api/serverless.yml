@@ -69,6 +69,21 @@ functions:
             parameters:
                paths:
                  account: true
+  candidateHistory:
+    timeout: 29
+    environment:
+      octopus_garden_db_read: ${ssm:/octopus_garden_db_read}
+    handler: collation.history
+    events:
+      -
+        http:
+          path: collator/{account}/history
+          method: get
+          cors: true
+          request:
+            parameters:
+               paths:
+                 account: true
   stakingRound:
     timeout: 29
     environment:
