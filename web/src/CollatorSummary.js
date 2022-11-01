@@ -23,7 +23,7 @@ function CollatorSummary(props) {
   return (
     <tr>
       <td>
-        <Link to={`/collator/${account}`} style={{color: '#e83e8c', textDecoration: 'none'}}>
+        <Link to={`/collator/${account}`} target="_collator" style={{color: '#e83e8c', textDecoration: 'none'}}>
           <Identicon value={account} size={24} theme={`substrate`} />
           <code style={{marginLeft: '0.5em'}}>
             { account }
@@ -35,7 +35,17 @@ function CollatorSummary(props) {
           (!!blocks.length && !!(score * 100 / 20))
             ? [...Array(Math.min(Math.round(score * 100 / 20), 5)).keys()].map((_, i) => (
                 <span key={i}>
-                  {(score > 1) ? `🌟` : `⭐`}
+                  {
+                    (
+                      (score > 1.8 && i >= 0)
+                      || (score > 1.6 && i >= 1)
+                      || (score > 1.4 && i >= 2)
+                      || (score > 1.2 && i >= 3)
+                      || (score > 1.0 && i >= 4)
+                    )
+                      ? `☀️`
+                      : `⭐`
+                  }
                 </span>
               ))
             : <span>💤</span>

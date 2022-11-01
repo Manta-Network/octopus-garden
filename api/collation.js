@@ -48,6 +48,7 @@ const fetchCandidateBlocks = async (account) => {
         round,
         length,
         authored,
+        target,
         authors,
         score,
       };
