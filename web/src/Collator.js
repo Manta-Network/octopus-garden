@@ -32,7 +32,7 @@ ChartJS.register(
 function Collator(props) {
   const { account } = useParams();
   const [history, setHistory] = useState(undefined);
-  const [lineChartData, setLineChartData] = useState(undefined);
+  const [lineChartArgs, setLineChartArgs] = useState(undefined);
   useEffect(() => {
     if (!!account && !history) {
       fetch(`https://81y8y0uwx8.execute-api.eu-central-1.amazonaws.com/prod/collator/${account}/history`)
@@ -44,26 +44,51 @@ function Collator(props) {
             container.rounds.pop(); // lose the currently running round
             const rounds = container.rounds.filter(r => !!r.score); // lose rounds not participated in
             const score = Math.round(rounds.map((r) => r.score).reduce((acc, e) => acc + e, 0) / rounds.length);
-            setLineChartData({
-              labels: rounds.map((r) => r.round),
-              datasets: [
-                {
-                  label: account,
-                  data: rounds.map((r) => r.score),
-                  fill: true,
-                  backgroundColor: '#d048b6',
-                  borderColor: '#d048b6',
-                  borderWidth: 2,
-                  lineTension: 0.75,
-                  pointBackgroundColor: '#d048b6',
-                  pointBorderColor: '#ffffff',
-                  pointHoverBackgroundColor: '#d048b6',
-                  pointBorderWidth: 1,
-                  pointHoverRadius: 4,
-                  pointHoverBorderWidth: 15,
-                  pointRadius: 3,
+            setLineChartArgs({
+              options: {
+                plugins: {
+                  legend: {
+                    labels: {
+                      color: '#ffffff',
+                      font: {
+                        size: 18,
+                      },
+                    },
+                  },
                 },
-              ],
+              },
+              data: {
+                labels: rounds.map((r) => r.round),
+                datasets: [
+                  {
+                    label: 'authored',
+                    data: rounds.map((r) => r.authored),
+                    fill: true,
+                    backgroundColor: '#d048b6',
+                    borderColor: '#d048b6',
+                    borderWidth: 2,
+                    lineTension: 0.75,
+                    pointBackgroundColor: '#d048b6',
+                    pointBorderColor: '#ffffff',
+                    pointHoverBackgroundColor: '#d048b6',
+                    pointBorderWidth: 1,
+                    pointHoverRadius: 4,
+                    pointHoverBorderWidth: 15,
+                    pointRadius: 3,
+                  },
+                  {
+                    label: 'authoring target',
+                    data: rounds.map((r) => r.target),
+                    fill: true,
+                    backgroundColor: '#ffc300',
+                    borderColor: '#ffc300',
+                    borderWidth: 2,
+                    lineTension: 0.75,
+                    borderDash: [3, 6],
+                    pointRadius: 0,
+                  },
+                ],
+              },
             });
             setHistory({
               rounds: rounds.reverse(),
@@ -106,7 +131,7 @@ function Collator(props) {
         (!!history)
           ? (
               <Fragment>
-                <Line data={lineChartData} />
+                <Line {...lineChartArgs} />
                 <Table striped bordered hover variant="dark">
                   <thead>
                     <tr>

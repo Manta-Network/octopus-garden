@@ -33,7 +33,7 @@ function CollatorList() {
         .catch((error) => {
           console.error(error);
         });
-    }, 12 * 1000);
+    }, 1000);
     return () => clearInterval(interval);
   }, []);
   return (
