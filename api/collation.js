@@ -37,14 +37,21 @@ const fetchCandidateBlocks = async (account) => {
   ]).toArray();
   const rounds = [...new Set(authorCountByRound.map(r => parseInt(r._id.round, 10)))]
     .sort((a, b) => a > b ? 1 : a < b ? -1 : 0)
-    .map(round => ({
-      round,
-      length: 1800, // todo: get length of round from chain
-      authored: authorCountByRound.some((acbr) => (acbr._id.round === round && acbr._id.author === nimbus))
-        ? authorCountByRound.find((acbr) => (acbr._id.round === round && acbr._id.author === nimbus)).count
-        : 0,
-      authors: authorCountByRound.filter((acbr) => (acbr._id.round === round)).length,
-    }));
+    .map(round => {
+      const roundAuthors = authorCountByRound.filter((r) => (r._id.round === round));
+      const length = roundAuthors.map((r) => r.count).reduce((acc, e) => acc + e, 0);
+      const authors = roundAuthors.length;
+      const target = Math.floor(length / authors);
+      const authored = (roundAuthors.find((r) => (r._id.author === nimbus)) || { count: 0 }).count;
+      const score = Math.floor((authored / target) * 100);
+      return {
+        round,
+        length,
+        authored,
+        authors,
+        score,
+      };
+    });
   return { rounds };
 };
 
