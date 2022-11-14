@@ -14,6 +14,7 @@ import ProgressBar from 'react-bootstrap/ProgressBar';
 
 import Collator from './Collator';
 import CollatorList from './CollatorList';
+import Maintenance from './Maintenance';
 
 function App() {
   const [round, setRound] = useState(undefined);
@@ -32,7 +33,7 @@ function App() {
           }
         })
         .catch((error) => {
-          console.error(error);
+          //console.error(error);
         });
     }, 1000);
     return () => clearInterval(interval);
@@ -81,7 +82,7 @@ function App() {
       <Row>
         <Routes>
           <Route path='/' element={ <CollatorList /> } />
-          <Route path='/collator/:account' element={ <Collator /> } />
+          <Route path='/collator/:account' element={ <Collator current={round} /> } />
         </Routes>
       </Row>
     </Container>

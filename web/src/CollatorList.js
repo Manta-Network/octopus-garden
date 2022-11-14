@@ -3,6 +3,10 @@ import Row from 'react-bootstrap/Row';
 import Spinner from 'react-bootstrap/Spinner';
 import Table from 'react-bootstrap/Table';
 import CollatorSummary from './CollatorSummary';
+/*
+import { ApiPromise, WsProvider } from '@polkadot/api';
+const wsProvider = new WsProvider('wss://ws.archive.calamari.systems');
+*/
 
 function CollatorList() {
   const [collators, setCollators] = useState(undefined);
@@ -31,11 +35,54 @@ function CollatorList() {
           }
         })
         .catch((error) => {
-          console.error(error);
+          //console.error(error);
         });
     }, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  /*
+  useEffect(() => {
+    async function watchBalance() {
+      if (!!account && sort > 0) {
+        const api = await ApiPromise.create({ provider: wsProvider });
+        const authoredBlockHash = await api.rpc.chain.getBlockHash(sort);
+        const authoredBlockParentHash = (await api.rpc.chain.getHeader(authoredBlockHash)).parentHash;
+        const [
+          apiAtAuthoredBlockHash,
+          apiAtAuthoredBlockParentHash,
+        ] = await Promise.all([
+          await api.at(authoredBlockHash),
+          await api.at(authoredBlockParentHash),
+        ]);
+        const [
+          balanceAtAuthoredBlockHash,
+          balanceAtAuthoredBlockParentHash,
+        ] = await Promise.all([
+          apiAtAuthoredBlockHash.query.system.account(account),
+          apiAtAuthoredBlockParentHash.query.system.account(account),
+        ]);
+        const [
+          before,
+          after,
+        ] = [
+          balanceAtAuthoredBlockParentHash.data.free,
+          balanceAtAuthoredBlockHash.data.free
+        ];
+        console.log({
+          before,
+          after,
+        });
+        const blockReward = ((BigInt(after) - BigInt(before)) / BigInt(1000000000));
+        if (blockReward > 0) {
+          console.log({account, blockReward});
+          setBlockReward(blockReward);
+        }
+      }
+    }
+    watchBalance();
+  }, [account]);
+  */
   return (
     <Fragment>
       <Row>
@@ -53,18 +100,9 @@ function CollatorList() {
                       </th>
                       <th style={{ textAlign: 'right' }}>
                         block
-                        {
-                          (!!blockHeight)
-                            ? (
-                                <span style={{marginLeft: '0.5em'}}>
-                                  ({blockHeight})
-                                </span>
-                              )
-                            : null
-                        }
                       </th>
                       <th style={{ textAlign: 'right' }}>
-                        status ({collators.filter((c)=>c.collating).length}/{collators.length})
+                        status ({collators.filter((c)=>c.collating).length})
                       </th>
                       <th style={{ textAlign: 'right' }}>
                         bond

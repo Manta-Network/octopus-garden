@@ -5,7 +5,10 @@ import Identicon from '@polkadot/react-identicon';
 
 function CollatorSummary(props) {
   const { account, stake, collating, selected, session, blocks, score, sort } = props;
+  //const [focus, setFocus] = useState(false);
   const [candidateInfo, setCandidateInfo] = useState(undefined);
+  const [balance, setBalance] = useState({});
+  const [blockReward, setBlockReward] = useState(0);
   useEffect(() => {
     fetch(`https://81y8y0uwx8.execute-api.eu-central-1.amazonaws.com/prod/collator/${account}/info`)
       .then(response => response.json())
@@ -14,12 +17,13 @@ function CollatorSummary(props) {
           console.error(container.error);
         } else {
           setCandidateInfo(container.candidateInfo);
+          setFocus(false);
         }
       })
       .catch((error) => {
-        console.error(error);
+        //console.error(error);
       });
-  }, []);
+  }, [account]);
   return (
     <tr>
       <td>
@@ -62,6 +66,15 @@ function CollatorSummary(props) {
             : null
         }
       </td>
+      {
+        (!!blockReward)
+          ? (
+              <td style={{ textAlign: 'right' }}>
+              {blockReward}
+              </td>
+            )
+          : null
+      }
       <td style={{ textAlign: 'right' }}>
         {
           (!!blocks.length)
