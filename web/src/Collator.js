@@ -155,7 +155,12 @@ function Collator(props) {
                         value: Infinity,
                       },
                     ].map((p) => (
-                      <Button key={p.value} style={{marginLeft: '0.5em'}} variant={(period === p.value) ? ((loading) ? 'light' : 'primary') : 'secondary'} onClick={() => { setPeriod(p.value); setLoading(true); }}>
+                      <Button
+                        key={p.value}
+                        style={{marginLeft: '0.5em'}}
+                        variant={(period === p.value) ? (loading) ? 'light' : 'primary' : 'secondary'}
+                        title={`last ${p.value} rounds`}
+                        onClick={() => { setPeriod(p.value); setLoading(true); }}>
                         {p.label}
                       </Button>
                     ))
@@ -187,6 +192,12 @@ function Collator(props) {
                       </th>
                       <th style={{ textAlign: 'right' }}>
                         authored
+                      </th>
+                      <th style={{ textAlign: 'right' }}>
+                        bond reward
+                      </th>
+                      <th style={{ textAlign: 'right' }}>
+                        fees collected
                       </th>
                     </tr>
                   </thead>
@@ -240,6 +251,28 @@ function Collator(props) {
                           </td>
                           <td style={{ textAlign: 'right' }}>
                             { round.authored }
+                          </td>
+                          <td style={{ textAlign: 'right' }}>
+                            {
+                              (!!round.reward && !!round.reward.bond)
+                                ? (
+                                    <span>
+                                      {new Intl.NumberFormat().format(BigInt(round.reward.bond.amount) / BigInt(1000000000000))}
+                                    </span>
+                                  )
+                                : null
+                            }
+                          </td>
+                          <td style={{ textAlign: 'right' }}>
+                            {
+                              (!!round.reward && !!round.reward.fees && !!round.reward.fees.length)
+                                ? (
+                                    <span>
+                                      {new Intl.NumberFormat().format(Number(round.reward.fees.reduce((a, fee) => (a + BigInt(fee.amount)), BigInt(0)) * 1000n / BigInt(1000000000000)) / 1000)}
+                                    </span>
+                                  )
+                                : null
+                            }
                           </td>
                         </tr>
                       ))

@@ -1,8 +1,6 @@
 {
   "dependencies": {
-    "@polkadot/api": "^8.3.2",
-    "@polkadot/api-derive": "false9.5.1",
-    "@polkadot/keyring": "false10.1.10",
+    "@polkadot/api": "^9.6.2",
     "mongodb": "^4.11.0",
     "node-fetch": "2"
   },

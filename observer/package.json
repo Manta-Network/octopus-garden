@@ -9,7 +9,12 @@
   "license": "MIT",
   "private": false,
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "block": "node block.js",
+    "round": "node round.js",
+    "reward": "node reward.js",
+    "event": "node event.js",
+    "delegations": "node delegations.js"
   },
   "dependencies": {
     "@polkadot/api": "^9.6.1",

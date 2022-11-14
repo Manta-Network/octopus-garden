@@ -2,39 +2,47 @@
 
 const MongoClient = require('mongodb').MongoClient;
 const { ApiPromise, WsProvider } = require("@polkadot/api");
-//const { encodeAddress } = require("@polkadot/keyring");
 const wsProvider = new WsProvider('wss://ws.archive.calamari.systems');
 const databaseUri = (process.env.octopus_garden_db_read);
-const connectToDatabase = async () => {
+const connectToDatabase = async (dbName) => {
   const client = await MongoClient.connect(databaseUri);
-  const db = await client.db('test');
+  const db = await client.db(dbName);
   return db;
 }
 const fetchRoundBlocks = async (round) => {
-  const db = await connectToDatabase();
-  const blocks = await db.collection('kusama-calamari-block').find({ round }, { projection: { _id: 0 } }).toArray();
+  const testDb = await connectToDatabase('test');
+  const blocks = await testDb.collection('kusama-calamari-block').find({ round }, { projection: { _id: 0 } }).toArray();
   return blocks;
 };
 const fetchCandidateBlocks = async (account) => {
   const api = await ApiPromise.create({ provider: wsProvider });
   const { nimbus } = JSON.parse(JSON.stringify(await api.query.session.nextKeys(account)));
-  const db = await connectToDatabase();
-  const authorCountByRound = await db.collection('kusama-calamari-block').aggregate([
-    {
-      $match: {
-        round: { $gt: 0 },
+  const testDb = await connectToDatabase('test');
+  const [
+    authorCountByRound,
+    feeRewardByRound,
+  ] = await Promise.all([
+    testDb.collection('kusama-calamari-block').aggregate([
+      {
+        $match: {
+          round: { $gt: 0 },
+        }
+      },
+      {
+        $group: {
+          _id: {
+            round : "$round",
+            author : "$author",
+        },
+          count: { $sum: 1 },
+        },
       }
-    },
-    {
-      $group: {
-        _id: {
-          round : "$round",
-          author : "$author",
-      },
-        count: { $sum: 1 },
-      },
-    }
-  ]).toArray();
+    ]).toArray(),
+    testDb.collection('kusama-calamari-block').find({ author: nimbus, reward: { $exists: true, $ne: '0x00' } }, { projection: { _id: false,  reward: true,  number: true,  round: true } }).toArray()
+  ]);
+  //todo: refactor into earlier promise.all when everything is in the same db
+  const prodDb = await connectToDatabase('kusama-calamari');
+  const bondStakingRewardByRound = await prodDb.collection('reward').find({ account }, { projection: { _id: false,  amount: true,  block: true,  round: true } }).toArray();
   const rounds = [...new Set(authorCountByRound.map(r => parseInt(r._id.round, 10)))]
     .sort((a, b) => a > b ? 1 : a < b ? -1 : 0)
     .map(round => {
@@ -44,6 +52,9 @@ const fetchCandidateBlocks = async (account) => {
       const target = Math.floor(length / authors);
       const authored = (roundAuthors.find((r) => (r._id.author === nimbus)) || { count: 0 }).count;
       const score = Math.floor((authored / target) * 100);
+      const reward = bondStakingRewardByRound.find(r => r.round === round);
+      // todo: remove the following fee-less-than-two check when the observer is patched
+      const fees = feeRewardByRound.filter(f => f.round === round && ((BigInt(f.reward) / BigInt(1000000000000)) < 2));
       return {
         round,
         length,
@@ -51,6 +62,16 @@ const fetchCandidateBlocks = async (account) => {
         target,
         authors,
         score,
+        reward: (!!reward || !!fees.length) && {
+          bond: (!!reward) && {
+            amount: reward.amount,
+            block: reward.block,
+          },
+          fees: (!!fees.length) && fees.map(fee => ({
+            amount: fee.reward,
+            block: fee.number,
+          })),
+        },
       };
     });
   return { rounds };
@@ -60,6 +81,7 @@ module.exports.list = async (event) => {
   const response = {
     headers: {
       'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Credentials': true,
       'Content-Type': 'application/json',
     },
   };
@@ -108,6 +130,7 @@ module.exports.info = async (event) => {
   const response = {
     headers: {
       'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Credentials': true,
       'Content-Type': 'application/json',
     },
   };
@@ -134,6 +157,7 @@ module.exports.history = async (event) => {
   const response = {
     headers: {
       'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Credentials': true,
       'Content-Type': 'application/json',
     },
   };
@@ -157,6 +181,7 @@ module.exports.round = async (event) => {
   const response = {
     headers: {
       'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Credentials': true,
       'Content-Type': 'application/json',
     },
   };
