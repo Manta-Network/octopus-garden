@@ -72,18 +72,20 @@ async function main () {
       api.query.parachainStaking.round(),
       api.rpc.chain.getBlock(),
     ]);
+    const roundLength = parseInt(round.length, 10);
     const rounds = range(1, round.current + 1).map((number) => ({
       number,
       first: round.first - ((round.current - number) * round.length),
     }));
-    for (let blockNumber = lastBlock.block.header.number; blockNumber >= 2196747; blockNumber--) {
-      const roundNumber = (rounds.find(r => blockNumber >= r.first && blockNumber < (r.first + 1800)).number);
+    //for (let blockNumber = lastBlock.block.header.number; blockNumber >= 2196747; blockNumber--) {
+    for (let blockNumber = (2196747 + (9 * roundLength)); blockNumber <= lastBlock.block.header.number; blockNumber++) {
+      const roundNumber = (rounds.find(r => blockNumber >= r.first && blockNumber < (r.first + roundLength)).number);
       const rewardsForRound = (roundNumber - 1);
       if (blockNumber > (rounds.find(r => r.number === roundNumber).first + 60)) {
-        console.log(`block: ${blockNumber}. skipped.`);
+        //console.log(`block: ${blockNumber}. skipped.`);
         continue;
       }
-      console.log(`block: ${blockNumber}. seeking rewards for round: ${rewardsForRound}...`);
+      //console.log(`seeking rewards for round: ${rewardsForRound}, in block: ${blockNumber}, round: ${roundNumber}...`);
       const [
         blockHash,
       ] = await Promise.all([
@@ -119,6 +121,7 @@ async function main () {
           round: rewardsForRound,
         })),
       }));
+      let foundInBlock = 0;
       for (let aI = 0; aI < rewarded.length; aI++) {
         await collection.deleteMany( { account: rewarded[aI].account, block: rewarded[aI].block } );
         for (let rI = 0; rI < rewarded[aI].rewards.length; rI++) {
@@ -129,11 +132,25 @@ async function main () {
             amount: rewarded[aI].rewards[rI].amount,
           };
           const insert = await collection.insertOne(payout);
-          console.log({
-            ...payout,
-            insert,
-          });
+          if (insert.acknowledged) {
+            foundInBlock++;
+          }
+          //console.log({ ...payout, insert });
         }
+      }
+      if (!!foundInBlock) {
+        const roundIndex = rounds.findIndex(r => r.number === roundNumber);
+        if (!!rounds[roundIndex].found) {
+          rounds[roundIndex].found += foundInBlock;
+        } else {
+          if (!!rounds[roundIndex - 1].found) {
+            console.log(`found ${rounds[roundIndex - 1].found} reward${(rounds[roundIndex - 1].found > 1) ? 's' : ''} for round: ${(rewardsForRound - 1)}, in round: ${(roundNumber - 1)}`);
+          }
+          rounds[roundIndex].found = foundInBlock;
+        }
+        console.log(`found ${foundInBlock} reward${(foundInBlock > 1) ? 's' : ''} for round: ${rewardsForRound}, in block: ${blockNumber} / round: ${roundNumber}`);
+      } else {
+
       }
     }
   }
