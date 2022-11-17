@@ -43,6 +43,13 @@ const fetchCandidateBlocks = async (account) => {
   //todo: refactor into earlier promise.all when everything is in the same db
   const prodDb = await connectToDatabase('kusama-calamari');
   const bondStakingRewardByRound = await prodDb.collection('reward').find({ account }, { projection: { _id: false,  amount: true,  block: true,  round: true } }).toArray();
+  const [
+    nominatorStakingRewardByRound,
+    stakingRounds,
+  ] = await Promise.all([
+    prodDb.collection('reward').find({ account: { $ne: account }, block: { $in: bondStakingRewardByRound.map(x => x.block) } }, { projection: { _id: false } }).toArray(),
+    prodDb.collection('round').find({}, { projection: { _id: false } }).toArray(),
+  ]);
   const rounds = [...new Set(authorCountByRound.map(r => parseInt(r._id.round, 10)))]
     .sort((a, b) => a > b ? 1 : a < b ? -1 : 0)
     .map(round => {
@@ -53,6 +60,20 @@ const fetchCandidateBlocks = async (account) => {
       const authored = (roundAuthors.find((r) => (r._id.author === nimbus)) || { count: 0 }).count;
       const score = Math.floor((authored / target) * 100);
       const reward = bondStakingRewardByRound.find(r => r.round === round);
+      const nominators = nominatorStakingRewardByRound.filter(r => r.round === round).map(n => ({
+        account: n.account,
+        stake: {
+          amount: stakingRounds
+            .find(r => r.number === round)
+            .stakeholders.find(sh => sh.collator.owner === account)
+            .nominators.find(x => x.owner === n.account)
+            .amount,
+        },
+        reward: {
+          amount: n.amount,
+          block: n.block,
+        },
+      }));
       // todo: remove the following fee-less-than-two check when the observer is patched
       const fees = feeRewardByRound.filter(f => f.round === round && ((BigInt(f.reward) / BigInt(1000000000000)) < 2));
       return {
@@ -62,6 +83,7 @@ const fetchCandidateBlocks = async (account) => {
         target,
         authors,
         score,
+        nominators,
         reward: (!!reward || !!fees.length) && {
           bond: (!!reward) && {
             amount: reward.amount,
