@@ -30,6 +30,9 @@ ChartJS.register(
   Legend
 );
 
+const kmaFormatter = new Intl.NumberFormat('default', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+const kmaDecimalFormatter = new Intl.NumberFormat('default', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
 const roundPeriod = (currentRound, roundNumber) => {
   const currentRoundStartTime = new Date(Date.now() - ((currentRound.latest - currentRound.first) * 12000));
   const start = new Date(currentRoundStartTime - ((currentRound.number - roundNumber) * currentRound.length * 12000));
@@ -194,10 +197,19 @@ function Collator(props) {
                         authored
                       </th>
                       <th style={{ textAlign: 'right' }}>
+                        nominations
+                      </th>
+                      <th style={{ textAlign: 'right' }}>
+                        nomination stake
+                      </th>
+                      <th style={{ textAlign: 'right' }}>
+                        nominator rewards
+                      </th>
+                      <th style={{ textAlign: 'right' }}>
                         bond reward
                       </th>
                       <th style={{ textAlign: 'right' }}>
-                        fees collected
+                        fees earned
                       </th>
                     </tr>
                   </thead>
@@ -253,24 +265,25 @@ function Collator(props) {
                             { round.authored }
                           </td>
                           <td style={{ textAlign: 'right' }}>
+                            { round.nominators.length }
+                          </td>
+                          <td style={{ textAlign: 'right' }}>
+                            { kmaFormatter.format(Number(round.nominators.reduce((a, n) => (a + BigInt(n.stake.amount)), BigInt(0)) * 100n / BigInt(1000000000000)) / 100) }
+                          </td>
+                          <td style={{ textAlign: 'right' }}>
+                            { kmaFormatter.format(Number(round.nominators.reduce((a, n) => (a + BigInt(n.reward.amount)), BigInt(0)) * 100n / BigInt(1000000000000)) / 100) }
+                          </td>
+                          <td style={{ textAlign: 'right' }}>
                             {
                               (!!round.reward && !!round.reward.bond)
-                                ? (
-                                    <span>
-                                      {new Intl.NumberFormat().format(BigInt(round.reward.bond.amount) / BigInt(1000000000000))}
-                                    </span>
-                                  )
+                                ? (kmaFormatter.format(Number(BigInt(round.reward.bond.amount) * 100n / BigInt(1000000000000)) / 100))
                                 : null
                             }
                           </td>
                           <td style={{ textAlign: 'right' }}>
                             {
                               (!!round.reward && !!round.reward.fees && !!round.reward.fees.length)
-                                ? (
-                                    <span>
-                                      {new Intl.NumberFormat().format(Number(round.reward.fees.reduce((a, fee) => (a + BigInt(fee.amount)), BigInt(0)) * 1000n / BigInt(1000000000000)) / 1000)}
-                                    </span>
-                                  )
+                                ? (kmaDecimalFormatter.format(Number(round.reward.fees.reduce((a, fee) => (a + BigInt(fee.amount)), BigInt(0)) * 100n / BigInt(1000000000000)) / 100))
                                 : null
                             }
                           </td>
@@ -278,6 +291,36 @@ function Collator(props) {
                       ))
                     }
                   </tbody>
+                  <tfoot>
+                    <tr>
+                      <th colSpan="2">
+                        totals
+                      </th>
+                      <th style={{ textAlign: 'right' }} colSpan="2">
+                      </th>
+                      <th style={{ textAlign: 'right' }}>
+                      </th>
+                      <th style={{ textAlign: 'right' }}>
+                        {history.rounds.reduce((acc, round) => (acc + round.target), 0)}
+                      </th>
+                      <th style={{ textAlign: 'right' }}>
+                        {history.rounds.reduce((acc, round) => (acc + round.authored), 0)}
+                      </th>
+                      <th style={{ textAlign: 'right' }}>
+                      </th>
+                      <th style={{ textAlign: 'right' }}>
+                      </th>
+                      <th style={{ textAlign: 'right' }}>
+                        {kmaFormatter.format(Number(history.rounds.reduce((acc, round) => (acc + BigInt(round.nominators.reduce((a, n) => (a + BigInt(n.reward.amount)), BigInt(0)) * 1000n)), BigInt(0)) / BigInt(1000000000000)) / 1000)}
+                      </th>
+                      <th style={{ textAlign: 'right' }}>
+                        {kmaFormatter.format(history.rounds.reduce((acc, round) => (acc + BigInt((!!round.reward && !!round.reward.bond) ? round.reward.bond.amount : 0)), BigInt(0)) / BigInt(1000000000000))}
+                      </th>
+                      <th style={{ textAlign: 'right' }}>
+                        {kmaDecimalFormatter.format(Number(history.rounds.reduce((acc, round) => (acc + BigInt((!!round.reward && !!round.reward.fees && !!round.reward.fees.length) ? round.reward.fees.reduce((a, fee) => (a + BigInt(fee.amount)), BigInt(0)) * 1000n : 0)), BigInt(0)) / BigInt(1000000000000)) / 1000)}
+                      </th>
+                    </tr>
+                  </tfoot>
                 </Table>
               </Fragment>
             )
