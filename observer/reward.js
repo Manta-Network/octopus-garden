@@ -1,13 +1,12 @@
 'use strict';
 
+//import { workerData, parentPort } from 'worker_threads';
 import { MongoClient } from 'mongodb';
 import { ApiPromise, WsProvider } from '@polkadot/api';
-
 const uri = {
   scheme: 'mongodb+srv',
   host: 'chaincluster.oulrzox.mongodb.net',
-  database: 'test',
-  collection: 'kusama-calamari-block',
+  database: 'kusama-calamari',
   auth: {
     mechanism: 'MONGODB-X509',
     source: '$external',
@@ -22,14 +21,9 @@ const randomInt = (min, max) => {
   min = Math.ceil(min);
   max = Math.floor(max);
   return Math.floor(Math.random() * (max - min) + min);
-};
-const roundAuthorsCache = [];
-
-//const provider = new WsProvider('wss://ws.archive.calamari.systems');
-const provider = new WsProvider(`wss://a${randomInt(1, 5)}.calamari.systems`);
-
+}
 function bnToHex(bn) {
-  //bn = BigInt(bn);
+  bn = BigInt(bn);
 
   var pos = true;
   if (bn < 0) {
@@ -61,53 +55,93 @@ function bitnot(bn) {
   return BigInt('0b' + prefix + bin) + BigInt(1);
 }
 
-(async () => {
+const provider = new WsProvider('wss://ws.archive.calamari.systems');
+//const provider = new WsProvider(`wss://a${randomInt(1, 5)}.calamari.systems`);
+
+const observationThreshold = 0.9;
+
+const shuffle = (a) => {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+}
+
+/*
+module.exports = (input, callback) => {
+  callback(null, input + ' ' + world)
+}
+*/
+
+async function main () {
   const api = await ApiPromise.create({ provider });
-  const collection = client.db(uri.database).collection(uri.collection);
-  const candidatePool = await api.query.parachainStaking.candidatePool();
-  const sessionKeys = await Promise.all(candidatePool.map(cp => api.query.session.nextKeys(cp.owner)));
-  const collators = candidatePool.map((c, cI) => ({
-    account: c.owner.toString(),
-    ...JSON.parse(JSON.stringify(sessionKeys[cI])),
-  }));
+  const db = client.db(uri.database);
+  const rewardCollection = db.collection('reward');
+  const roundCollection = db.collection('round');
+  let iteration = 1;
+  while (true) {
+    const rounds = ((await roundCollection.find({}, { projection: { _id: false } }).sort({ number: -1 }).toArray()) || []);
+    //shuffle(rounds);
+    const roundLength = 1800;
 
-  console.log({collators});
-
-  while(true) {
-    try {
-      const blocks = (await collection.find(
-        {
-          reward: { $exists: false }
-        },
-        {
-          projection: {
-            _id: false,
-            round: true,
-            number: true,
-            hash: true,
-            author: true,
-            reward: true,
-          }
-        },
-      ).sort( { number: -1 } ).limit(6000).toArray()) || [];
-      for (let bI = 0; bI < blocks.length; bI++) {
-        const block = blocks[bI];
-        if (collators.some(c => c.nimbus === block.author)) {
-          const { account } = collators.find(c => c.nimbus === block.author);
-          const balance = {
-            after: BigInt(JSON.parse(JSON.stringify(await (await api.at(block.hash)).query.system.account(account))).data.free),
-            before: BigInt(JSON.parse(JSON.stringify(await (await api.at((await api.rpc.chain.getHeader(block.hash)).parentHash)).query.system.account(account))).data.free),
-          };
-          const reward = bnToHex(balance.after - balance.before);
-          if (!!reward) {
-            const update = await collection.updateOne({ number: block.number }, { $set: { reward } }, { upsert: true });
-            console.log({block: {...block, reward}, update});
+    for (let roundIndex = 1; roundIndex < rounds.length; roundIndex++) {
+      const roundNumber = rounds[roundIndex].number;
+      const rewardForRoundIndex = roundIndex - 1;
+      const rewardForRoundNumber = roundNumber - 1;
+      const stakeholderCount = rounds[rewardForRoundIndex].stakeholders.reduce((sA, s) => (sA + 1 + s.nominators.length), 0);
+      const observedRoundRewards = ((await rewardCollection.find({ round: rewardForRoundNumber }, { projection: { _id: false } }).toArray()) || []);
+      let observedRoundRewardCount = observedRoundRewards.length;
+      if (observedRoundRewardCount > stakeholderCount) {
+        const deleteRound = await rewardCollection.deleteMany( { round: rewardForRoundNumber } );
+        if (deleteRound.acknowledged) {
+          observedRoundRewardCount = 0;
+          console.log(deleteRound);
+        }
+      }
+      const observationScore = (Number(observedRoundRewardCount * 100 / stakeholderCount) / 100);
+      console.log(`iteration: ${iteration}, round: ${roundNumber} (${rounds[roundIndex].first} - ${(rounds[roundIndex].first + roundLength - 1)}), stakeholders: ${stakeholderCount}, observed reward count: ${observedRoundRewardCount}, observation score: ${observationScore}`);
+      if (observationScore < observationThreshold) {
+        for (let blockNumber = rounds[roundIndex].first; blockNumber < (rounds[roundIndex].first + roundLength); blockNumber++) {
+          const observedBlockRewards = ((await rewardCollection.find({ block: blockNumber }, { projection: { _id: false } }).toArray()) || []);
+          const observedBlockRewardCount = observedBlockRewards.length;
+          if (!observedBlockRewardCount) {
+            //await rewardCollection.deleteMany( { block: blockNumber } );
+            const blockHash = await api.rpc.chain.getBlockHash(blockNumber)
+            const apiAt = await api.at(blockHash);
+            const records = await apiAt.query.system.events();
+            const events = records.filter(({ event }) => event.section === 'parachainStaking' && event.method === 'Rewarded').map(({ event }) => ({
+              account: event.data[0].toString(),
+              amount: bnToHex(event.data[1]),
+            }));
+            const blockRewards = [];
+            for (let eventIndex = 0; eventIndex < events.length; eventIndex++) {
+              const reward = {
+                account: events[eventIndex].account,
+                round: rewardForRoundNumber,
+                block: blockNumber,
+                amount: events[eventIndex].amount,
+              };
+              const update = await rewardCollection.updateOne(reward, { $set: reward }, { upsert: true });
+              if (update.acknowledged) {
+                blockRewards.push({
+                  account: reward.account,
+                  amount: reward.amount,
+                });
+              }
+            }
+            console.log(`- block: ${blockNumber}, observed reward count: ${blockRewards.length}`);
+            if (!blockRewards.length) {
+              break;
+            }
           }
         }
       }
-      //await new Promise(r => setTimeout(r, 1000));
-    } catch (error) {
-      console.error(error);
     }
+    iteration++;
   }
-})()
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exit(-1);
+});
