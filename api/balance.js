@@ -1,6 +1,7 @@
 'use strict';
 
 const fetch = require('node-fetch');
+const { decodeAddress, encodeAddress } = require('@polkadot/keyring');
 
 const subscanApiKey = process.env.subscan_api_key;
 const range = (start, end) => Array.from({length: ((end + 1) - start)}, (v, k) => k + start);
@@ -30,11 +31,16 @@ module.exports.over = async (event) => {
     })));
     const accounts = (await Promise.all(responses.map((response) => response.json()))).reduce((a, json) => ([
       ...a,
-      ...(json.data.list || []).filter(({ address, balance }) => address != treasury && Number(balance) > amount).map(({ address, balance: total, balance_lock: locked }) => ({
-        address,
+      ...(json.data.list || []).filter(({ address, balance }) => address != treasury && Number(balance) > amount).map(({ address: calamari, balance: total, balance_lock: locked }) => ({
+        address: {
+          calamari,
+          kusama: encodeAddress(decodeAddress(calamari), 2),
+        },
         balance: {
-          total,
-          locked,
+          calamari: {
+            total,
+            locked,
+          },
         },
       })),
     ]), []);
