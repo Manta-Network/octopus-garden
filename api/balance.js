@@ -38,8 +38,8 @@ module.exports.over = async (event) => {
         },
         balance: {
           calamari: {
-            total,
-            locked,
+            total: parseInt(total),
+            locked: parseInt(locked),
           },
         },
       })),
