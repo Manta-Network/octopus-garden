@@ -34,8 +34,6 @@ package:
 
 functions:
   circulation:
-    memorySize: 1024
-    timeout: 29
     handler: handler.circulation
     events:
       -
@@ -43,6 +41,28 @@ functions:
           path: circulation
           method: get
           cors: true
+  circulationAsDecimal:
+    handler: handler.circulationAsDecimal
+    events:
+      -
+        http:
+          path: circulationAsDecimal
+          method: get
+          cors: true
+  balance:
+    environment:
+      subscan_api_key: ${ssm:/octopus_garden_subscan_api_key}
+    handler: balance.over
+    events:
+      -
+        http:
+          path: balance/over/{amount}
+          method: get
+          cors: true
+          request:
+            parameters:
+               paths:
+                 amount: true
   candidatePool:
     timeout: 29
     environment:
