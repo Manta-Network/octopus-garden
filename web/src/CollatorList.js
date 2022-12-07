@@ -95,6 +95,9 @@ function CollatorList() {
                       <th>
                         candidate ({collators.length})
                       </th>
+                      <th>
+                        nick
+                      </th>
                       <th style={{ textAlign: 'right' }}>
                         authored
                       </th>

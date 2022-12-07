@@ -4,7 +4,7 @@ import Spinner from 'react-bootstrap/Spinner';
 import Identicon from '@polkadot/react-identicon';
 
 function CollatorSummary(props) {
-  const { account, stake, collating, selected, session, blocks, score, sort } = props;
+  const { account, nick, stake, collating, selected, session, blocks, score, sort } = props;
   //const [focus, setFocus] = useState(false);
   const [candidateInfo, setCandidateInfo] = useState(undefined);
   const [balance, setBalance] = useState({});
@@ -29,10 +29,13 @@ function CollatorSummary(props) {
       <td>
         <Link to={`/collator/${account}`} target="_collator" style={{color: '#e83e8c', textDecoration: 'none'}}>
           <Identicon value={account} size={24} theme={`substrate`} />
-          <code style={{marginLeft: '0.5em'}}>
+          <code style={{marginLeft: '0.5em', fontSize: '75%'}}>
             { account }
           </code>
         </Link>
+      </td>
+      <td>
+        { nick }
       </td>
       <td style={{ textAlign: 'right' }}>
         {
