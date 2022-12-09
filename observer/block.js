@@ -5,8 +5,8 @@ import { ApiPromise, WsProvider } from '@polkadot/api';
 const uri = {
   scheme: 'mongodb+srv',
   host: 'chaincluster.oulrzox.mongodb.net',
-  database: 'test',
-  collection: 'kusama-calamari-block',
+  database: 'kusama-calamari',
+  collection: 'block',
   auth: {
     mechanism: 'MONGODB-X509',
     source: '$external',
@@ -23,8 +23,8 @@ const randomInt = (min, max) => {
   return Math.floor(Math.random() * (max - min) + min);
 }
 
-//const provider = new WsProvider('wss://ws.archive.calamari.systems');
-const provider = new WsProvider(`wss://a${randomInt(1, 5)}.calamari.systems`);
+const provider = new WsProvider('wss://ws.archive.calamari.systems');
+//const provider = new WsProvider(`wss://a${randomInt(1, 5)}.calamari.systems`);
 
 
 (async () => {
