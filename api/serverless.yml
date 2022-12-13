@@ -33,6 +33,18 @@ package:
   excludeDevDependencies: true
 
 functions:
+  account:
+    handler: handler.account
+    events:
+      -
+        http:
+          path: account/{address}
+          method: get
+          cors: true
+          request:
+            parameters:
+               paths:
+                 address: true
   circulation:
     handler: handler.circulation
     events:
@@ -47,6 +59,14 @@ functions:
       -
         http:
           path: circulationAsDecimal
+          method: get
+          cors: true
+  circulatingSupply:
+    handler: handler.circulatingSupply
+    events:
+      -
+        http:
+          path: circulatingSupply
           method: get
           cors: true
   balance:
@@ -104,6 +124,23 @@ functions:
             parameters:
                paths:
                  account: true
+  candidateSummary:
+    timeout: 29
+    environment:
+      octopus_garden_db_read: ${ssm:/octopus_garden_db_read}
+    handler: collation.summary
+    events:
+      -
+        http:
+          path: collator/{account}/summary/{start}/{end}
+          method: get
+          cors: true
+          request:
+            parameters:
+               paths:
+                 account: true
+                 start: true
+                 end: true
   stakingRound:
     timeout: 29
     environment:

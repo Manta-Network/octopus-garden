@@ -35,7 +35,7 @@ function App() {
         .catch((error) => {
           //console.error(error);
         });
-    }, 1000);
+    }, 3000);
     return () => clearInterval(interval);
   }, []);
   return (
@@ -83,6 +83,7 @@ function App() {
         <Routes>
           <Route path='/' element={ <CollatorList /> } />
           <Route path='/collator/:account' element={ <Collator current={round} /> } />
+          <Route path='/collator/:account/:start/:end' element={ <Collator current={round} /> } />
         </Routes>
       </Row>
     </Container>

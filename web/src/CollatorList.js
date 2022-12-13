@@ -37,7 +37,7 @@ function CollatorList() {
         .catch((error) => {
           //console.error(error);
         });
-    }, 1000);
+    }, 6000);
     return () => clearInterval(interval);
   }, []);
 
@@ -105,9 +105,6 @@ function CollatorList() {
                         block
                       </th>
                       <th style={{ textAlign: 'right' }}>
-                        status ({collators.filter((c)=>c.collating).length})
-                      </th>
-                      <th style={{ textAlign: 'right' }}>
                         bond
                       </th>
                       <th style={{ textAlign: 'right' }}>
@@ -159,12 +156,6 @@ function CollatorList() {
           </dt>
           <dd>
             the most recent block authored by the candidate.
-          </dd>
-          <dt>
-            status
-          </dt>
-          <dd>
-            the computed status of the collator candidate, determined by the number of blocks authored.
           </dd>
           <dt>
             bond

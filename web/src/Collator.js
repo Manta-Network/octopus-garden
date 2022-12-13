@@ -57,191 +57,191 @@ const roundPeriod = (currentRound, roundNumber) => {
 };
 
 function Collator(props) {
-  const { account } = useParams();
   const { current } = props;
-  const [loading, setLoading] = useState(true);
+  const params = useParams();
   const [period, setPeriod] = useState(28);
+  const { account, start, end } = {
+    ...params,
+    start: (!current || !current.number) ? 0 : (!!params.start) ? params.start : (current.number - period),
+    end: (!current || !current.number) ? 0 : (!!params.end) ? params.end : (current.number - 1),
+  };
+  const [loading, setLoading] = useState(true);
   const [history, setHistory] = useState(undefined);
   const [chartArgs, setChartArgs] = useState(undefined);
   useEffect(() => {
-    fetch(`https://81y8y0uwx8.execute-api.eu-central-1.amazonaws.com/prod/collator/${account}/history`)
-      .then(response => response.json())
-      .then((container) => {
-        if (!!container.error) {
-          console.error(container.error);
-        } else {
-          container.rounds.pop(); // lose the currently running round
-          const rounds = container.rounds.slice(-period).filter(r => (!!r.score)); // lose rounds not participated in
-          const score = Math.round(rounds.map((r) => r.score).reduce((acc, e) => acc + e, 0) / rounds.length);
-          const bondRewards = rounds.map((r) => Number(BigInt(r.reward.bond.amount || 0) / BigInt(1000000000000)));
-          if (!bondRewards.slice(-1)[0]) {
-            bondRewards.pop();
-          }
-          const topNominators = rounds.filter(r => !!r.nominators.length).slice(-1)[0].nominators.sort((a, b) => (a.stake.amount > b.stake.amount) ? 1 : (a.stake.amount < b.stake.amount) ? -1 : 0).slice(-9).map((n) => n.account).map((account) => ({
-            label: account,
-            data: rounds.map((r) => (r.nominators.some(n => n.account === account))
-              ? Number(BigInt(r.nominators.find(n => n.account === account).reward.amount) / BigInt(1000000000000))
-              : null
-            ),
-            color: randomColor(),
-          }));
-          const nominationStake = rounds.map((round) => Number(round.nominators.reduce((a, n) => (a + BigInt(n.stake.amount)), BigInt(0)) * 100n / BigInt(1000000000000)) / 100);
-          if (!nominationStake.slice(-1)[0]) {
-            nominationStake.pop();
-          }
-          setChartArgs({
-            productivity: {
-              options: {
-                plugins: {
-                  title: {
-                    display: true,
-                    text: 'blocks',
-                    color: '#ffffff',
-                    font: {
-                      size: 18,
-                    },
-                  },
-                  legend: {
-                    labels: {
-                      color: '#ffffff',
-                      font: {
-                        size: 18,
+    const interval = setInterval(() => {
+      if (!!start && !!end) {
+        fetch(`https://81y8y0uwx8.execute-api.eu-central-1.amazonaws.com/prod/collator/${account}/summary/${start}/${end}`)
+          .then(response => response.json())
+          .then((container) => {
+            if (!!container.error) {
+              console.error(container.error);
+            } else {
+              const { rounds, score } = container;
+              if (!!container.bond && !!container.bond.rewards && !container.bond.rewards.slice(-1)[0]) {
+                container.bond.rewards.pop();
+              }
+              if (!!container.nominators && !!container.nominators.stake && !container.nominators.stake.slice(-1)[0]) {
+                container.nominators.stake.pop();
+              }
+              setChartArgs({
+                productivity: {
+                  options: {
+                    plugins: {
+                      title: {
+                        display: true,
+                        text: 'blocks',
+                        color: '#ffffff',
+                        font: {
+                          size: 18,
+                        },
+                      },
+                      legend: {
+                        labels: {
+                          color: '#ffffff',
+                          font: {
+                            size: 18,
+                          },
+                        },
                       },
                     },
                   },
+                  data: {
+                    labels: rounds.map((r) => r.round),
+                    datasets: [
+                      {
+                        label: 'authored',
+                        data: rounds.map((r) => r.authored),
+                        fill: true,
+                        backgroundColor: '#d048b6',
+                        borderColor: '#d048b6',
+                        borderWidth: 2,
+                        lineTension: 0.75,
+                        pointBackgroundColor: '#d048b6',
+                        pointBorderColor: '#ffffff',
+                        pointHoverBackgroundColor: '#d048b6',
+                        pointBorderWidth: 1,
+                        pointHoverRadius: 4,
+                        pointHoverBorderWidth: 15,
+                        pointRadius: 3,
+                      },
+                      {
+                        label: 'authoring target',
+                        data: rounds.map((r) => r.target),
+                        fill: true,
+                        backgroundColor: '#ffc300',
+                        borderColor: '#ffc300',
+                        borderWidth: 2,
+                        lineTension: 0.75,
+                        borderDash: [3, 6],
+                        pointRadius: 0,
+                      },
+                    ],
+                  },
                 },
-              },
-              data: {
-                labels: rounds.map((r) => r.round),
-                datasets: [
-                  {
-                    label: 'authored',
-                    data: rounds.map((r) => r.authored),
-                    fill: true,
-                    backgroundColor: '#d048b6',
-                    borderColor: '#d048b6',
-                    borderWidth: 2,
-                    lineTension: 0.75,
-                    pointBackgroundColor: '#d048b6',
-                    pointBorderColor: '#ffffff',
-                    pointHoverBackgroundColor: '#d048b6',
-                    pointBorderWidth: 1,
-                    pointHoverRadius: 4,
-                    pointHoverBorderWidth: 15,
-                    pointRadius: 3,
-                  },
-                  {
-                    label: 'authoring target',
-                    data: rounds.map((r) => r.target),
-                    fill: true,
-                    backgroundColor: '#ffc300',
-                    borderColor: '#ffc300',
-                    borderWidth: 2,
-                    lineTension: 0.75,
-                    borderDash: [3, 6],
-                    pointRadius: 0,
-                  },
-                ],
-              },
-            },
-            stake: {
-              options: {
-                plugins: {
-                  title: {
-                    display: true,
-                    text: 'stake',
-                    color: '#ffffff',
-                    font: {
-                      size: 18,
-                    },
-                  },
-                  legend: {
-                    labels: {
-                      color: '#ffffff',
-                      font: {
-                        size: 18,
+                stake: {
+                  options: {
+                    plugins: {
+                      title: {
+                        display: true,
+                        text: 'stake',
+                        color: '#ffffff',
+                        font: {
+                          size: 18,
+                        },
+                      },
+                      legend: {
+                        labels: {
+                          color: '#ffffff',
+                          font: {
+                            size: 18,
+                          },
+                        },
                       },
                     },
                   },
+                  data: {
+                    labels: rounds.map((r) => r.round),
+                    datasets: [
+                      {
+                        label: 'total nomination stake',
+                        data: container.nominators.stake,
+                        fill: true,
+                        backgroundColor: '#d048b6',
+                        borderColor: '#d048b6',
+                        borderWidth: 2,
+                        lineTension: 0.75,
+                        pointRadius: 0,
+                      },
+                    ],
+                  },
                 },
-              },
-              data: {
-                labels: rounds.map((r) => r.round),
-                datasets: [
-                  {
-                    label: 'total nomination stake',
-                    data: nominationStake,
-                    fill: true,
-                    backgroundColor: '#d048b6',
-                    borderColor: '#d048b6',
-                    borderWidth: 2,
-                    lineTension: 0.75,
-                    pointRadius: 0,
-                  },
-                ],
-              },
-            },
-            reward: {
-              options: {
-                plugins: {
-                  title: {
-                    display: true,
-                    text: 'rewards',
-                    color: '#ffffff',
-                    font: {
-                      size: 18,
-                    },
-                  },
-                  legend: {
-                    labels: {
-                      color: '#ffffff',
-                      font: {
-                        size: 18,
+                reward: {
+                  options: {
+                    plugins: {
+                      title: {
+                        display: true,
+                        text: 'rewards',
+                        color: '#ffffff',
+                        font: {
+                          size: 18,
+                        },
+                      },
+                      legend: {
+                        labels: {
+                          color: '#ffffff',
+                          font: {
+                            size: 18,
+                          },
+                        },
                       },
                     },
                   },
-                },
-              },
-              data: {
-                labels: rounds.map((r) => r.round),
-                datasets: [
-                  {
-                    label: `${account.slice(0, 5)}...${account.slice(-10)}`,
-                    data: bondRewards,
-                    fill: true,
-                    backgroundColor: '#d048b6',
-                    borderColor: '#d048b6',
-                    borderWidth: 2,
-                    lineTension: 0.75,
-                    pointRadius: 0,
+                  data: {
+                    labels: rounds.map((r) => r.round),
+                    datasets: [
+                      {
+                        label: `${account.slice(0, 5)}...${account.slice(-10)}`,
+                        data: container.bond.rewards,
+                        fill: true,
+                        backgroundColor: '#d048b6',
+                        borderColor: '#d048b6',
+                        borderWidth: 2,
+                        lineTension: 0.75,
+                        pointRadius: 0,
+                      },
+                      ...container.nominators.top.map((nominator) => ({
+                          ...nominator,
+                          color: randomColor(),
+                        })).map(({account, data, color}) => ({
+                        label: `${account.slice(0, 5)}...${account.slice(-10)}`,
+                        data,
+                        backgroundColor: color,
+                        borderColor: color,
+                        fill: true,
+                        borderWidth: 2,
+                        lineTension: 0.75,
+                        pointRadius: 0,
+                      })),
+                    ],
                   },
-                  ...topNominators.map(n => ({
-                    label: `${n.label.slice(0, 5)}...${n.label.slice(-10)}`,
-                    data: n.data,
-                    backgroundColor: n.color,
-                    borderColor: n.color,
-                    fill: true,
-                    borderWidth: 2,
-                    lineTension: 0.75,
-                    pointRadius: 0,
-                  })),
-                ],
-              },
-            },
-          });
-          setHistory({
-            rounds: rounds.reverse(),
-            score,
-            first: rounds.map(r => r.round).reduce((a, b) => Math.min(a, b), Infinity),
-            last: rounds.map(r => r.round).reduce((a, b) => Math.max(a, b), -Infinity),
-          });
-          setLoading(false);
-        }
-      })
-      .catch((error) => {
-        //console.error(error);
-      });
-  }, [account, period]);
+                },
+              });
+              setHistory({
+                rounds: rounds.reverse(),
+                score,
+                first: rounds.map(r => r.round).reduce((a, b) => Math.min(a, b), Infinity),
+                last: rounds.map(r => r.round).reduce((a, b) => Math.max(a, b), -Infinity),
+                total: container.total,
+              });
+              setLoading(false);
+            }
+          })
+          .catch(console.error);
+      }
+    }, 12000);
+    return () => clearInterval(interval);
+  }, [account, period, start, end]);
   return (
     <Fragment>
       <Row>
@@ -380,22 +380,22 @@ function Collator(props) {
                           </td>
                           <td style={{ textAlign: 'right' }}>
                             {
-                              (!!round.nominators.length)
-                                ? (round.nominators.length)
+                              (!!round.nominators.count)
+                                ? (round.nominators.count)
                                 : null
                             }
                           </td>
                           <td style={{ textAlign: 'right' }}>
                             {
-                              (!!round.nominators.length)
-                                ? (`${kmaDecimalFormatter.format(Number(round.nominators.reduce((a, n) => (a + BigInt(n.stake.amount)), BigInt(0)) * 100n / BigInt(1000000000000)) / 100000000)}m`)
+                              (!!round.nominators.count)
+                                ? (`${kmaDecimalFormatter.format(round.nominators.stake)}`)
                                 : null
                             }
                           </td>
                           <td style={{ textAlign: 'right' }}>
                             {
-                              (!!round.nominators.length)
-                                ? (kmaFormatter.format(Number(round.nominators.reduce((a, n) => (a + BigInt(n.reward.amount)), BigInt(0)) * 100n / BigInt(1000000000000)) / 100))
+                              (!!round.nominators.count)
+                                ? (kmaFormatter.format(round.nominators.reward))
                                 : null
                             }
                           </td>
@@ -420,9 +420,52 @@ function Collator(props) {
                   <tfoot>
                     <tr>
                       <th colSpan="2">
-                        totals
+                        average
                       </th>
-                      <th style={{ textAlign: 'right' }} colSpan="2">
+                      <th style={{ textAlign: 'right', borderRight: 0 }}>
+                        {
+                          (!!(history.score / 20))
+                            ? [...Array(Math.min(Math.round(history.score / 20), 5)).keys()].map((_, i) => (
+                                <span key={i}>
+                                  {
+                                    (
+                                      (history.score > 180 && i >= 0)
+                                      || (history.score > 160 && i >= 1)
+                                      || (history.score > 140 && i >= 2)
+                                      || (history.score > 120 && i >= 3)
+                                      || (history.score > 100 && i >= 4)
+                                    )
+                                      ? `☀️`
+                                      : `⭐`
+                                  }
+                                </span>
+                              ))
+                            : <span>💤</span>
+                        }
+                      </th>
+                      <th style={{ textAlign: 'right', width: '4.5em', borderLeft: 0}}>
+                        { history.score } &#37;
+                      </th>
+                      <th style={{ textAlign: 'right' }}>
+                      </th>
+                      <th style={{ textAlign: 'right' }}>
+                      </th>
+                      <th style={{ textAlign: 'right' }}>
+                      </th>
+                      <th style={{ textAlign: 'right' }}>
+                      </th>
+                      <th style={{ textAlign: 'right' }}>
+                      </th>
+                      <th style={{ textAlign: 'right' }}>
+                      </th>
+                      <th style={{ textAlign: 'right' }}>
+                      </th>
+                    </tr>
+                    <tr>
+                      <th colSpan="2">
+                        total
+                      </th>
+                      <th colSpan="2">
                       </th>
                       <th style={{ textAlign: 'right' }}>
                       </th>
@@ -434,10 +477,18 @@ function Collator(props) {
                       <th style={{ textAlign: 'right' }}>
                       </th>
                       <th style={{ textAlign: 'right' }}>
-                        {kmaFormatter.format(Number(history.rounds.reduce((acc, round) => (acc + BigInt(round.nominators.reduce((a, n) => (a + BigInt(n.reward.amount)), BigInt(0)) * 1000n)), BigInt(0)) / BigInt(1000000000000)) / 1000)}
+                        {
+                          (!!history.total && !!history.total.reward)
+                            ? kmaFormatter.format(history.total.reward.nominators)
+                            : null
+                        }
                       </th>
                       <th style={{ textAlign: 'right' }}>
-                        {kmaFormatter.format(history.rounds.reduce((acc, round) => (acc + BigInt((!!round.reward && !!round.reward.bond) ? round.reward.bond.amount : 0)), BigInt(0)) / BigInt(1000000000000))}
+                        {
+                          (!!history.total && !!history.total.reward)
+                            ? kmaFormatter.format(history.total.reward.bond)
+                            : null
+                        }
                       </th>
                       <th style={{ textAlign: 'right' }}>
                         {kmaDecimalFormatter.format(Number(history.rounds.reduce((acc, round) => (acc + BigInt((!!round.reward && !!round.reward.fees && !!round.reward.fees.length) ? round.reward.fees.reduce((a, fee) => (a + BigInt(fee.amount)), BigInt(0)) * 1000n : 0)), BigInt(0)) / BigInt(1000000000000)) / 1000)}

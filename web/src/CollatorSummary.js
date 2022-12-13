@@ -80,17 +80,6 @@ function CollatorSummary(props) {
       }
       <td style={{ textAlign: 'right' }}>
         {
-          (!!blocks.length)
-            ? (
-                <span>collating</span>
-              )
-            : (
-                <span>waiting</span>
-              )
-        }
-      </td>
-      <td style={{ textAlign: 'right' }}>
-        {
           !!candidateInfo
             ? (
                 new Intl.NumberFormat().format(BigInt(candidateInfo.bond) / BigInt(1000000000000))
