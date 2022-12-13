@@ -118,8 +118,8 @@ const fetchCandidateSummary = async (account, start, end) => {
         ...round,
         nominators: {
           count: round.nominators.length,
-          stake: Number(round.nominators.reduce((a, n) => (a + BigInt(n.stake.amount)), BigInt(0)) * BigInt(10 ** 6) / BigInt(1000000000000)) / (10 ** 6),
-          reward: Number(round.nominators.reduce((a, n) => (a + BigInt(n.reward.amount)), BigInt(0)) * BigInt(10 ** 6) / BigInt(1000000000000)) / (10 ** 6)
+          stake: Number(round.nominators.reduce((a, n) => (a + BigInt(n.stake.amount || 0)), BigInt(0)) * BigInt(10 ** 6) / BigInt(1000000000000)) / (10 ** 6),
+          reward: Number(round.nominators.reduce((a, n) => (a + BigInt(n.reward.amount || 0)), BigInt(0)) * BigInt(10 ** 6) / BigInt(1000000000000)) / (10 ** 6)
         },
       })),
       score: Math.round(rounds.map((r) => r.score).reduce((acc, e) => acc + e, 0) / rounds.length),
@@ -131,7 +131,7 @@ const fetchCandidateSummary = async (account, start, end) => {
             : null
           ),
         })),
-        stake: rounds.map((round) => Number(round.nominators.reduce((a, n) => (a + BigInt(n.stake.amount)), BigInt(0)) * 100n / BigInt(1000000000000)) / 100),
+        stake: rounds.map((round) => Number(round.nominators.reduce((a, n) => (a + BigInt(n.stake.amount || 0)), BigInt(0)) * 100n / BigInt(1000000000000)) / 100),
       },
       bond: {
         rewards: 0,//rounds.map((round) => Number(BigInt(round.reward.bond.amount || 0) / BigInt(1000000000000))),
