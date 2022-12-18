@@ -134,7 +134,7 @@ const fetchCandidateSummary = async (account, start, end) => {
         stake: rounds.map((round) => Number(round.nominators.reduce((a, n) => (a + BigInt(n.stake.amount || 0)), BigInt(0)) * 100n / BigInt(1000000000000)) / 100),
       },
       bond: {
-        rewards: 0,//rounds.map((round) => Number(BigInt(round.reward.bond.amount || 0) / BigInt(1000000000000))),
+        rewards: rounds.map((round) => Number(BigInt((!!round.reward && !!round.reward.bond) ? round.reward.bond.amount : 0) / BigInt(1000000000000))),
       },
       total: {
         reward: {
