@@ -388,7 +388,7 @@ function Collator(props) {
                           <td style={{ textAlign: 'right' }}>
                             {
                               (!!round.nominators.count)
-                                ? (`${kmaDecimalFormatter.format(round.nominators.stake)}`)
+                                ? (`${kmaFormatter.format(round.nominators.stake)}`)
                                 : null
                             }
                           </td>
