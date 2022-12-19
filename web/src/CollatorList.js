@@ -72,10 +72,8 @@ function CollatorList() {
                 data: {
                   labels: [
                     '400k',
-                    '0.4m - 1m',
-                    '1m - 2m',
-                    '2m - 3m',
-                    '3m - 4m',
+                    '0.4m - 2.2m',
+                    '2.2m - 4m',
                     '4m+',
                   ],
                   datasets: [
@@ -83,18 +81,14 @@ function CollatorList() {
                       label: `collator bond status`,
                       data: [
                         collators.filter((c) => (BigInt(c.info.bond) / BigInt(1000000000000)) <= 400000).length,
-                        collators.filter((c) => (((BigInt(c.info.bond) / BigInt(1000000000000)) > 400000) && ((BigInt(c.info.bond) / BigInt(1000000000000)) <= 1000000))).length,
-                        collators.filter((c) => (((BigInt(c.info.bond) / BigInt(1000000000000)) > 1000000) && ((BigInt(c.info.bond) / BigInt(1000000000000)) <= 2000000))).length,
-                        collators.filter((c) => (((BigInt(c.info.bond) / BigInt(1000000000000)) > 2000000) && ((BigInt(c.info.bond) / BigInt(1000000000000)) <= 3000000))).length,
-                        collators.filter((c) => (((BigInt(c.info.bond) / BigInt(1000000000000)) > 3000000) && ((BigInt(c.info.bond) / BigInt(1000000000000)) < 4000000))).length,
+                        collators.filter((c) => (((BigInt(c.info.bond) / BigInt(1000000000000)) > 400000) && ((BigInt(c.info.bond) / BigInt(1000000000000)) <= 2200000))).length,
+                        collators.filter((c) => (((BigInt(c.info.bond) / BigInt(1000000000000)) > 2200000) && ((BigInt(c.info.bond) / BigInt(1000000000000)) < 4000000))).length,
                         collators.filter((c) => (BigInt(c.info.bond) / BigInt(1000000000000)) >= 4000000).length,
                       ],
                       backgroundColor: [
                         'rgb(255, 0, 0)',
-                        'rgb(250, 50, 0)',
-                        'rgb(200, 100, 10)',
-                        'rgb(150, 150, 30)',
-                        'rgb(100, 200, 50)',
+                        'rgb(255, 150, 24)',
+                        'rgb(235, 200, 36)',
                         'rgb(50, 205, 50)',
                       ],
                       hoverOffset: 4,
