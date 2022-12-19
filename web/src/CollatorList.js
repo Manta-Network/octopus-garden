@@ -1,17 +1,29 @@
 import { Fragment, useEffect, useState } from 'react';
+import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import Spinner from 'react-bootstrap/Spinner';
 import Table from 'react-bootstrap/Table';
 import CollatorSummary from './CollatorSummary';
-/*
-import { ApiPromise, WsProvider } from '@polkadot/api';
-const wsProvider = new WsProvider('wss://ws.archive.calamari.systems');
-*/
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+import { Doughnut } from 'react-chartjs-2';
+ChartJS.register(
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 function CollatorList() {
   const [collators, setCollators] = useState(undefined);
   const [sort, setSort] = useState({ column: 'account', ascending: true });
   const [blockHeight, setBlockHeight] = useState(undefined);
+  const [chartArgs, setChartArgs] = useState(undefined);
   useEffect(() => {
     const interval = setInterval(() => {
       fetch(`https://81y8y0uwx8.execute-api.eu-central-1.amazonaws.com/prod/collators`)
@@ -32,6 +44,65 @@ function CollatorList() {
             }).sort((a, b) => (a.sort > b.sort) ? 1 : (a.sort < b.sort) ? -1 : 0).reverse();
             setBlockHeight(collators.map(c => c.sort).reduce((a, b) => Math.max(a, b), -Infinity));
             setCollators(collators);
+            // red: #ff0000, amber: #ffbf00, green: #32cd32
+            setChartArgs({
+              bond: {
+                options: {
+                  circumference: 210,
+                  rotation: -105,
+                  plugins: {
+                    title: {
+                      display: true,
+                      text: 'permissionless readiness',
+                      color: '#ffffff',
+                      font: {
+                        size: 18,
+                      },
+                    },
+                    legend: {
+                      labels: {
+                        color: '#ffffff',
+                        font: {
+                          size: 18,
+                        },
+                      },
+                    },
+                  },
+                },
+                data: {
+                  labels: [
+                    '400k',
+                    '0.4m - 1m',
+                    '1m - 2m',
+                    '2m - 3m',
+                    '3m - 4m',
+                    '4m+',
+                  ],
+                  datasets: [
+                    {
+                      label: `collator bond status`,
+                      data: [
+                        collators.filter((c) => (BigInt(c.info.bond) / BigInt(1000000000000)) <= 400000).length,
+                        collators.filter((c) => (((BigInt(c.info.bond) / BigInt(1000000000000)) > 400000) && ((BigInt(c.info.bond) / BigInt(1000000000000)) <= 1000000))).length,
+                        collators.filter((c) => (((BigInt(c.info.bond) / BigInt(1000000000000)) > 1000000) && ((BigInt(c.info.bond) / BigInt(1000000000000)) <= 2000000))).length,
+                        collators.filter((c) => (((BigInt(c.info.bond) / BigInt(1000000000000)) > 2000000) && ((BigInt(c.info.bond) / BigInt(1000000000000)) <= 3000000))).length,
+                        collators.filter((c) => (((BigInt(c.info.bond) / BigInt(1000000000000)) > 3000000) && ((BigInt(c.info.bond) / BigInt(1000000000000)) < 4000000))).length,
+                        collators.filter((c) => (BigInt(c.info.bond) / BigInt(1000000000000)) >= 4000000).length,
+                      ],
+                      backgroundColor: [
+                        'rgb(255, 0, 0)',
+                        'rgb(250, 50, 0)',
+                        'rgb(200, 100, 10)',
+                        'rgb(150, 150, 30)',
+                        'rgb(100, 200, 50)',
+                        'rgb(50, 205, 50)',
+                      ],
+                      hoverOffset: 4,
+                    },
+                  ],
+                },
+              },
+            });
           }
         })
         .catch((error) => {
@@ -40,51 +111,19 @@ function CollatorList() {
     }, 6000);
     return () => clearInterval(interval);
   }, []);
-
-  /*
-  useEffect(() => {
-    async function watchBalance() {
-      if (!!account && sort > 0) {
-        const api = await ApiPromise.create({ provider: wsProvider });
-        const authoredBlockHash = await api.rpc.chain.getBlockHash(sort);
-        const authoredBlockParentHash = (await api.rpc.chain.getHeader(authoredBlockHash)).parentHash;
-        const [
-          apiAtAuthoredBlockHash,
-          apiAtAuthoredBlockParentHash,
-        ] = await Promise.all([
-          await api.at(authoredBlockHash),
-          await api.at(authoredBlockParentHash),
-        ]);
-        const [
-          balanceAtAuthoredBlockHash,
-          balanceAtAuthoredBlockParentHash,
-        ] = await Promise.all([
-          apiAtAuthoredBlockHash.query.system.account(account),
-          apiAtAuthoredBlockParentHash.query.system.account(account),
-        ]);
-        const [
-          before,
-          after,
-        ] = [
-          balanceAtAuthoredBlockParentHash.data.free,
-          balanceAtAuthoredBlockHash.data.free
-        ];
-        console.log({
-          before,
-          after,
-        });
-        const blockReward = ((BigInt(after) - BigInt(before)) / BigInt(1000000000));
-        if (blockReward > 0) {
-          console.log({account, blockReward});
-          setBlockReward(blockReward);
-        }
-      }
-    }
-    watchBalance();
-  }, [account]);
-  */
   return (
     <Fragment>
+      <Row>
+        {
+          (!!chartArgs)
+            ? Object.keys(chartArgs).map(key => (<Doughnut key={key} id={key} {...chartArgs[key]} style={{maxHeight: '400px'}} />))
+            : null
+        }
+        <Col>
+        </Col>
+        <Col>
+        </Col>
+      </Row>
       <Row>
         {
           (!!collators)

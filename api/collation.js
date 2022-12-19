@@ -26,6 +26,7 @@ const fetchRoundBlocks = async (round) => {
 };
 const fetchCandidateBlocks = async (account) => {
   const api = await ApiPromise.create({ provider: wsProvider });
+  await api.isReady;
   const { nimbus } = JSON.parse(JSON.stringify(await api.query.session.nextKeys(account)));
   const testDb = await connectToDatabase('test');
   const [
@@ -186,6 +187,10 @@ const nick = {
   dmvPeJ8vK8TDkDHZUbcgd1ceGWDd5PDhzb4tnAho3FBBV3xXX: 'Masternode24.de',
 };
 
+const toDecimal = (amount) => {
+  return (Number(BigInt(amount) * BigInt(10 ** 6) / BigInt(10 ** 12)) / (10 ** 6))
+};
+
 module.exports.list = async (event) => {
   const response = {
     headers: {
@@ -196,6 +201,7 @@ module.exports.list = async (event) => {
   };
   try {
     const api = await ApiPromise.create({ provider: wsProvider });
+    await api.isReady;
     const [
       candidatePool,
       selectedCandidates,
@@ -205,9 +211,14 @@ module.exports.list = async (event) => {
       api.query.parachainStaking.selectedCandidates(),
       api.query.parachainStaking.round(),
     ]);
-    const [ sessionKeys, blocks ] = await Promise.all([
-      Promise.all(candidatePool.map(cp => api.query.session.nextKeys(cp.owner))),
-      fetchRoundBlocks(parseInt(round.current, 10))
+    const [
+      sessionKeys,
+      blocks,
+      infos,
+    ] = await Promise.all([
+      api.query.session.nextKeys.multi(candidatePool.map((c) => c.owner)),
+      fetchRoundBlocks(parseInt(round.current, 10)),
+      api.query.parachainStaking.candidateInfo.multi(candidatePool.map((c) => c.owner)),
     ]);
     const collators = candidatePool.map((c, cI) => {
       const session = JSON.parse(JSON.stringify(sessionKeys[cI]));
@@ -218,6 +229,7 @@ module.exports.list = async (event) => {
         selected: selectedCandidates.includes(c.owner),
         collating: blocks.some((b) => b.author === session.nimbus),
         session,
+        info: infos[cI],
         blocks: blocks.filter((b) => b.author === session.nimbus),
       }
     });
@@ -247,6 +259,7 @@ module.exports.info = async (event) => {
   const { account } = event.pathParameters;
   try {
     const api = await ApiPromise.create({ provider: wsProvider });
+    await api.isReady;
     const candidateInfo = await api.query.parachainStaking.candidateInfo(account);
     response.statusCode = 200;
     response.body = JSON.stringify(
@@ -321,6 +334,7 @@ module.exports.round = async (event) => {
   };
   try {
     const api = await ApiPromise.create({ provider: wsProvider });
+    await api.isReady;
     const [ currentRound, latestHeader ] = await Promise.all([
       api.query.parachainStaking.round(),
       api.rpc.chain.getHeader(),
@@ -335,6 +349,67 @@ module.exports.round = async (event) => {
           latest: parseInt(latestHeader.number, 10),
         }
       },
+      2
+    );
+  } catch (error) {
+    response.statusCode = 500;
+    response.body = JSON.stringify({ error }, null, 2);
+    console.error(error);
+  }
+  return response;
+};
+
+module.exports.bonds = async (event) => {
+  const response = {
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Credentials': true,
+      'Content-Type': 'application/json',
+    },
+  };
+  try {
+    const api = await ApiPromise.create({ provider: wsProvider });
+    await api.isReady;
+    const [
+      candidatePool,
+      round,
+    ] = await Promise.all([
+      api.query.parachainStaking.candidatePool(),
+      api.query.parachainStaking.round(),
+    ]);
+    //const accounts = await api.query.system.account.multi(candidatePool.map((c) => c.owner));
+    const infos = JSON.parse(JSON.stringify(await api.query.parachainStaking.candidateInfo.multi(candidatePool.map((c) => c.owner))));
+    const bonds = candidatePool.map((c, i) => ({
+      address: c.owner,
+      bond: toDecimal(infos[i].bond),
+      //amount: toDecimal(c.amount),
+      //info: infos[i],
+    }));
+    /*
+    const [ sessionKeys, blocks ] = await Promise.all([
+      Promise.all(candidatePool.map(cp => api.query.session.nextKeys(cp.owner))),
+      fetchRoundBlocks(parseInt(round.current, 10))
+    ]);
+    const collators = candidatePool.map((c, cI) => {
+      const session = JSON.parse(JSON.stringify(sessionKeys[cI]));
+      return {
+        account: c.owner,
+        nick: nick[c.owner],
+        stake: c.amount,
+        selected: selectedCandidates.includes(c.owner),
+        collating: blocks.some((b) => b.author === session.nimbus),
+        session,
+        blocks: blocks.filter((b) => b.author === session.nimbus),
+      }
+    });
+    */
+    response.statusCode = 200;
+    response.body = JSON.stringify(
+      {
+        bonds,
+        round,
+      },
+      null,
       2
     );
   } catch (error) {

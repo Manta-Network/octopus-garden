@@ -37,6 +37,7 @@ const account = async (address) => {
 
 const circulatingSupply = async () => {
   const api = await ApiPromise.create({ provider: wsProvider });
+  await api.isReady;
   const [
     totalIssuanceString,
     treasuryBalance,

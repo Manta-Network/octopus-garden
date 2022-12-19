@@ -3,27 +3,31 @@ import { Link } from 'react-router-dom';
 import Spinner from 'react-bootstrap/Spinner';
 import Identicon from '@polkadot/react-identicon';
 
+const BondRenderer = (props) => {
+  const { amount } = props;
+  const title = (amount >= 4000000)
+    ? 'this collator meets the minimum bond requirement for permissionless collation'
+    : (amount > 400000)
+      ? 'this collator is working towards meeting the minimum bond requirement for permissionless collation'
+      : 'this collator does not meet the minimum bond requirement for permissionless collation';
+  return (
+    <span title={ title }>
+      {new Intl.NumberFormat().format(amount)} {
+        (amount >= 4000000)
+          ? '✅'
+          : (amount > 400000)
+            ? '🛠️'
+            : '⚠️'
+      }
+    </span>
+  );
+};
+
 function CollatorSummary(props) {
-  const { account, nick, stake, collating, selected, session, blocks, score, sort } = props;
+  const { account, nick, stake, collating, selected, session, info, blocks, score, sort } = props;
   //const [focus, setFocus] = useState(false);
-  const [candidateInfo, setCandidateInfo] = useState(undefined);
   const [balance, setBalance] = useState({});
   const [blockReward, setBlockReward] = useState(0);
-  useEffect(() => {
-    fetch(`https://81y8y0uwx8.execute-api.eu-central-1.amazonaws.com/prod/collator/${account}/info`)
-      .then(response => response.json())
-      .then((container) => {
-        if (!!container.error) {
-          console.error(container.error);
-        } else {
-          setCandidateInfo(container.candidateInfo);
-          setFocus(false);
-        }
-      })
-      .catch((error) => {
-        //console.error(error);
-      });
-  }, [account]);
   return (
     <tr>
       <td>
@@ -79,23 +83,13 @@ function CollatorSummary(props) {
           : null
       }
       <td style={{ textAlign: 'right' }}>
-        {
-          !!candidateInfo
-            ? (
-                new Intl.NumberFormat().format(BigInt(candidateInfo.bond) / BigInt(1000000000000))
-              )
-            : (
-                <Spinner animation="grow" variant="secondary" size="sm">
-                  <span className="visually-hidden">bond lookup in progress...</span>
-                </Spinner>
-              )
-        }
+        <BondRenderer amount={(BigInt(info.bond) / BigInt(1000000000000))} />
       </td>
       <td style={{ textAlign: 'right' }}>
         {
-          !!candidateInfo
+          !!info
             ? (
-                candidateInfo.delegationCount
+                info.delegationCount
               )
             : (
                 <Spinner animation="grow" variant="secondary" size="sm">
@@ -106,9 +100,9 @@ function CollatorSummary(props) {
       </td>
       <td style={{ textAlign: 'right' }}>
         {
-          !!candidateInfo
+          !!info
             ? (
-                new Intl.NumberFormat().format(BigInt(candidateInfo.lowestTopDelegationAmount) / BigInt(1000000000000))
+                new Intl.NumberFormat().format(BigInt(info.lowestTopDelegationAmount) / BigInt(1000000000000))
               )
             : (
                 <Spinner animation="grow" variant="secondary" size="sm">
