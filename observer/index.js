@@ -22,6 +22,7 @@ async function syncAll() {
     const database = client.db(uri.database);
     const collection = database.collection(uri.collection);
     const api = await ApiPromise.create({ provider: wsProvider });
+    await api.isReady;
     const [
       round,
       lastHeader,
@@ -63,6 +64,7 @@ async function syncRound() {
     const database = client.db(uri.database);
     const collection = database.collection(uri.collection);
     const api = await ApiPromise.create({ provider: wsProvider });
+    await api.isReady;
     const [
       round,
       lastHeader,
