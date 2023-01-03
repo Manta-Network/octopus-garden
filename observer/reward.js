@@ -136,8 +136,10 @@ async function main () {
                 });
               }
             }
-            console.log(`- round: ${roundNumber}, block: ${blockNumber}, observed reward count: ${blockRewards.length}`);
-            if (!blockRewards.length) {
+            if (!!blockRewards.length) {
+              console.log(`- round: ${roundNumber}, block: ${blockNumber}, observed reward count: ${blockRewards.length}, collator: ${blockRewards[0].account}`);
+            } else {
+              console.log(`- round: ${roundNumber}, block: ${blockNumber}, no observed rewards`);
               break;
             }
           }
