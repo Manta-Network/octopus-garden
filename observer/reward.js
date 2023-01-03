@@ -75,6 +75,7 @@ module.exports = (input, callback) => {
 
 async function main () {
   const api = await ApiPromise.create({ provider });
+  await api.isReady;
   const db = client.db(uri.database);
   const rewardCollection = db.collection('reward');
   const roundCollection = db.collection('round');
