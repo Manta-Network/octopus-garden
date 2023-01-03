@@ -1,6 +1,6 @@
 import { Worker } from 'worker_threads';
 import { MongoClient } from 'mongodb';
-//import { ApiPromise, WsProvider } from '@polkadot/api';
+import { ApiPromise, WsProvider } from '@polkadot/api';
 const mongoUri = {
   scheme: 'mongodb+srv',
   host: 'chaincluster.oulrzox.mongodb.net',
@@ -15,13 +15,14 @@ const mongoUri = {
 const mongoClient = new MongoClient(`${mongoUri.scheme}://${mongoUri.host}/${mongoUri.database}?authMechanism=${mongoUri.auth.mechanism}&authSource=${encodeURIComponent(mongoUri.auth.source)}&tls=${mongoUri.tls}&tlsCertificateKeyFile=${encodeURIComponent(mongoUri.cert)}`);
 const db = mongoClient.db(mongoUri.database);
 const rewardCollection = db.collection('reward');
-const wsUri = 'wss://ws.archive.calamari.systems';
+//const wsUri = 'wss://ws.archive.calamari.systems';
 //const wsProvider = new WsProvider(wsUri);
+
 
 const range = (start, end) => Array.from({length: (end - start)}, (v, k) => k + start);
 
-const runObservers = (observer) => {
-  return range(10, 20).map((rewardedRoundNumber, worker) => {
+const runObservers = (observer, start, end) => {
+  return range(start, (end + 1)).map((rewardedRoundNumber, worker) => {
     return new Promise((resolve, reject) => (
       new Worker(`./${observer}.js`, { workerData: { mongoUri, rewardedRoundNumber, } })
         .on('message', (message) => console.log(`worker`, worker, message))
@@ -32,7 +33,9 @@ const runObservers = (observer) => {
 }
 
 async function run() {
-  const results = await Promise.all(runObservers('roundReward'));
+  //const { current } = await (await ApiPromise.create({ provider: new WsProvider(wsUri) })).query.parachainStaking.round();
+  const current = 166;
+  const results = await Promise.all(runObservers('roundReward', (current - 3), current));
   results.map((result, worker) => {
     console.log(`worker`, worker, result);
   });

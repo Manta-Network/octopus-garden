@@ -12,9 +12,9 @@
     "start": "node index.js",
     "block": "node block.js",
     "round": "node round.js",
+    "fees": "node fees.js",
     "reward": "node reward.js",
-    "event": "node event.js",
-    "delegations": "node delegations.js"
+    "event": "node event.js"
   },
   "dependencies": {
     "@polkadot/api": "^9.6.1",

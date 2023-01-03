@@ -1,0 +1,22 @@
+[Unit]
+Description=sync-calamari-reward
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=grenade
+Group=grenade
+Type=simple
+WorkingDirectory=/home/grenade/git/Manta-Network/octopus-garden/observer
+ExecStartPre=/bin/bash -c '[ -d /home/grenade/git/Manta-Network/octopus-garden/.git ] || /usr/bin/git clone https://github.com/Manta-Network/octopus-garden.git /home/grenade/git/Manta-Network/octopus-garden'
+ExecStartPre=/usr/bin/git --git-dir=/home/grenade/git/Manta-Network/octopus-garden/.git --work-tree=/home/grenade/git/Manta-Network/octopus-garden pull
+ExecStartPre=mkdir -p /home/grenade/.local/bin
+#ExecStartPre=/usr/bin/npm config set prefix '/home/grenade/.local/'
+#ExecStartPre=/usr/bin/npm install --global yarn
+ExecStartPre=/home/grenade/.local/bin/yarn --cwd /home/grenade/git/Manta-Network/octopus-garden/observer
+ExecStart=/usr/bin/node /home/grenade/git/Manta-Network/octopus-garden/observer/reward.js
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

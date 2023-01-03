@@ -29,6 +29,7 @@ const provider = new WsProvider('wss://ws.archive.calamari.systems');
 
 (async () => {
   const api = await ApiPromise.create({ provider });
+  await api.isReady;
   const collection = client.db(uri.database).collection(uri.collection);
   for (let o = 0; o < Infinity; o++) {
     try {

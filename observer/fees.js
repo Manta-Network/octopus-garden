@@ -63,6 +63,7 @@ function bitnot(bn) {
 
 (async () => {
   const api = await ApiPromise.create({ provider });
+  await api.isReady;
   const collection = client.db(uri.database).collection(uri.collection);
   const candidatePool = await api.query.parachainStaking.candidatePool();
   const sessionKeys = await Promise.all(candidatePool.map(cp => api.query.session.nextKeys(cp.owner)));

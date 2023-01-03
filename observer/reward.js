@@ -136,7 +136,7 @@ async function main () {
                 });
               }
             }
-            console.log(`- block: ${blockNumber}, observed reward count: ${blockRewards.length}`);
+            console.log(`- round: ${roundNumber}, block: ${blockNumber}, observed reward count: ${blockRewards.length}`);
             if (!blockRewards.length) {
               break;
             }

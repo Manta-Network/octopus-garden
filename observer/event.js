@@ -60,6 +60,7 @@ const provider = new WsProvider('wss://ws.archive.calamari.systems');
 
 async function main () {
   const api = await ApiPromise.create({ provider });
+  await api.isReady;
   const db = client.db(uri.database);
   const collection = db.collection(uri.collection);
   while (true) {
@@ -72,13 +73,17 @@ async function main () {
       api.query.parachainStaking.round(),
       api.rpc.chain.getBlock(),
     ]);
+    const firstBlockNumber = 2196747;
+    const lastBlockNumber = lastBlock.block.header.number;
     const roundLength = parseInt(round.length, 10);
     const rounds = range(1, round.current + 1).map((number) => ({
       number,
-      first: round.first - ((round.current - number) * round.length),
+      first: round.first - ((round.current - number) * roundLength),
     }));
-    //for (let blockNumber = lastBlock.block.header.number; blockNumber >= 2196747; blockNumber--) {
-    for (let blockNumber = (2196747 + (9 * roundLength)); blockNumber <= lastBlock.block.header.number; blockNumber++) {
+    //const startBlockNumber = rounds.find(r => r.number === 114).first - 1;
+    const startBlockNumber = lastBlockNumber;
+    const endBlockNumber = startBlockNumber - (roundLength * 3) + 1;
+    for (let blockNumber = startBlockNumber; blockNumber >= endBlockNumber; blockNumber--) {
       const roundNumber = (rounds.find(r => blockNumber >= r.first && blockNumber < (r.first + roundLength)).number);
       const rewardsForRound = (roundNumber - 1);
       if (blockNumber > (rounds.find(r => r.number === roundNumber).first + 60)) {
@@ -143,8 +148,8 @@ async function main () {
         if (!!rounds[roundIndex].found) {
           rounds[roundIndex].found += foundInBlock;
         } else {
-          if (!!rounds[roundIndex - 1].found) {
-            console.log(`found ${rounds[roundIndex - 1].found} reward${(rounds[roundIndex - 1].found > 1) ? 's' : ''} for round: ${(rewardsForRound - 1)}, in round: ${(roundNumber - 1)}`);
+          if (!!rounds[roundIndex + 1].found) {
+            console.log(`found ${rounds[roundIndex + 1].found} reward${(rounds[roundIndex + 1].found > 1) ? 's' : ''} for round: ${(rewardsForRound + 1)}, in round: ${(roundNumber + 1)}`);
           }
           rounds[roundIndex].found = foundInBlock;
         }
