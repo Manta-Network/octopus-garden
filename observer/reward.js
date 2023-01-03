@@ -81,7 +81,13 @@ async function main () {
   const roundCollection = db.collection('round');
   let iteration = 1;
   while (true) {
-    const rounds = ((await roundCollection.find({}, { projection: { _id: false } }).sort({ number: -1 }).toArray()) || []);
+    const rounds = ((await roundCollection.find({}, {
+      allowDiskUse: true,
+      projection: { _id: false },
+      sort: [
+        [ 'number', -1 ],
+      ],
+    }).toArray()) || []);
     //shuffle(rounds);
     const roundLength = 1800;
 
