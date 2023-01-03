@@ -16,24 +16,23 @@ const wsProvider = new WsProvider('wss://ws.archive.calamari.systems');
 const databaseUri = (process.env.octopus_garden_db_read);
 const connectToDatabase = async (dbName) => {
   const client = await MongoClient.connect(databaseUri);
-  const db = await client.db(dbName);
-  return db;
+  return await client.db(dbName);
 }
 const fetchRoundBlocks = async (round) => {
-  const testDb = await connectToDatabase('test');
-  const blocks = await testDb.collection('kusama-calamari-block').find({ round }, { projection: { _id: 0 } }).toArray();
+  const db = await connectToDatabase('kusama-calamari');
+  const blocks = await db.collection('block').find({ round }, { projection: { _id: 0 } }).toArray();
   return blocks;
 };
 const fetchCandidateBlocks = async (account) => {
   const api = await ApiPromise.create({ provider: wsProvider });
   await api.isReady;
   const { nimbus } = JSON.parse(JSON.stringify(await api.query.session.nextKeys(account)));
-  const testDb = await connectToDatabase('test');
+  const db = await connectToDatabase('kusama-calamari');
   const [
     authorCountByRound,
     feeRewardByRound,
   ] = await Promise.all([
-    testDb.collection('kusama-calamari-block').aggregate([
+    db.collection('block').aggregate([
       {
         $match: {
           round: { $gt: 0 },
@@ -49,17 +48,15 @@ const fetchCandidateBlocks = async (account) => {
         },
       }
     ]).toArray(),
-    testDb.collection('kusama-calamari-block').find({ author: nimbus, reward: { $exists: true, $ne: '0x00' } }, { projection: { _id: false,  reward: true,  number: true,  round: true } }).toArray()
+    db.collection('block').find({ author: nimbus, reward: { $exists: true, $ne: '0x00' } }, { projection: { _id: false,  reward: true,  number: true,  round: true } }).toArray(),
   ]);
-  //todo: refactor into earlier promise.all when everything is in the same db
-  const prodDb = await connectToDatabase('kusama-calamari');
-  const bondStakingRewardByRound = await prodDb.collection('reward').find({ account }, { projection: { _id: false,  amount: true,  block: true,  round: true } }).toArray();
+  const bondStakingRewardByRound = await db.collection('reward').find({ account }, { projection: { _id: false,  amount: true,  block: true,  round: true } }).toArray();
   const [
     nominatorStakingRewardByRound,
     stakingRounds,
   ] = await Promise.all([
-    prodDb.collection('reward').find({ account: { $ne: account }, block: { $in: bondStakingRewardByRound.map(x => x.block) } }, { projection: { _id: false } }).toArray(),
-    prodDb.collection('round').find({}, { projection: { _id: false } }).toArray(),
+    db.collection('reward').find({ account: { $ne: account }, block: { $in: bondStakingRewardByRound.map(x => x.block) } }, { projection: { _id: false } }).toArray(),
+    db.collection('round').find({}, { projection: { _id: false } }).toArray(),
   ]);
   const rounds = [...new Set(authorCountByRound.map(r => parseInt(r._id.round, 10)))]
     .sort((a, b) => a > b ? 1 : a < b ? -1 : 0)
