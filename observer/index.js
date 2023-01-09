@@ -48,10 +48,8 @@ async function syncAll() {
           hash: hash.toString(),
           author: JSON.parse(JSON.stringify(header.digest.logs))[0].preRuntime[1],
         };
-        console.log({
-          ...block,
-          update: await collection.updateOne({ number }, { $set: block }, { upsert: true }),
-        });
+        const update = await collection.updateOne({ number }, { $set: block }, { upsert: true });
+        console.log(`round: ${round}, block: ${block.number}, author: ${block.author}, db: ${(!!update.modifiedCount) ? 'updated' : (!!update.upsertedCount) ? 'inserted' : '???'}`);
       }
     }
   } catch (error) {
