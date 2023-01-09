@@ -49,7 +49,7 @@ async function syncAll() {
           author: JSON.parse(JSON.stringify(header.digest.logs))[0].preRuntime[1],
         };
         const update = await collection.updateOne({ number }, { $set: block }, { upsert: true });
-        console.log(`round: ${round}, block: ${block.number}, author: ${block.author}, db: ${(!!update.modifiedCount) ? 'updated' : (!!update.upsertedCount) ? 'inserted' : JSON.stringify(update)}`);
+        console.log(`round: ${round}, block: ${block.number}, author: ${block.author}, db: ${(!!update.modifiedCount) ? 'updated' : (!!update.upsertedCount) ? 'inserted' : 'observed'}`);
       }
     }
   } catch (error) {
@@ -82,7 +82,7 @@ async function syncRound() {
         author: JSON.parse(JSON.stringify(header.digest.logs))[0].preRuntime[1],
       };
       const update = await collection.updateOne({ number }, { $set: block }, { upsert: true });
-      console.log(`round: ${round}, block: ${block.number}, author: ${block.author}, db: ${(!!update.modifiedCount) ? 'updated' : (!!update.upsertedCount) ? 'inserted' : JSON.stringify(update)}`);
+      console.log(`round: ${round}, block: ${block.number}, author: ${block.author}, db: ${(!!update.modifiedCount) ? 'updated' : (!!update.upsertedCount) ? 'inserted' : 'observed'}`);
       if (update.upsertedId === null) {
         return await new Promise(r => setTimeout(r, 5000));
       }
