@@ -6,8 +6,8 @@ const wsProvider = new WsProvider('wss://ws.archive.calamari.systems');
 const uri = {
   scheme: 'mongodb+srv',
   host: 'chaincluster.oulrzox.mongodb.net',
-  database: 'test',
-  collection: 'kusama-calamari-block',
+  database: 'kusama-calamari',
+  collection: 'block',
   auth: {
     mechanism: 'MONGODB-X509',
     source: '$external',
