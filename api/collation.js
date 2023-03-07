@@ -147,7 +147,14 @@ const fetchCandidateSummary = async (account, start, end) => {
 };
 
 const nick = {
+  dmxjZSec4Xj3xz3nBEwSHjQSnRGhvcoB4eRabkiw7pSDuv8fW: '🦑🛡️ c1 🛡️🦑',
+  dmu63DLez715hRyhzdigz6akxS2c9W6RQvrToUWuQ1hntcBwF: '🦑🛡️ c2 🛡️🦑',
+  dmxvivs72h11DBNyKbeF8KQvcksoZsK9uejLpaWygFHZ2fU9z: '🦑🛡️ c3 🛡️🦑',
+  dmyhGnuox8ny9R1efVsWKxNU2FevMxcPZaB66uEJqJhgC4a1W: '🦑🛡️ c4 🛡️🦑',
+  dmzbLejekGYZmfo5FoSznv5bBik7vGowuLxvzqFs2gZo2kANh: '🦑🛡️ c5 🛡️🦑',
+  dmvPeJ8vK8TDkDHZUbcgd1ceGWDd5PDhzb4tnAho3FBBV3xXX: 'Masternode24.de',
   dmxa3MJczFGT92BUQjwsxguUC2t5qFaDdagfpBQWdGkNPJYQ5: 'Anonstake',
+  dmwJT8yMLRzTPcNspYMvY6Cmjk7Nh6SNqsS99ykxyWF6MRpuK: 'PlusReward',
   dmup6erAb8iJHQ2UXyHkA1G6m1hnSLRM55PdSD7DDbN1Ww4ZN: 'Validatrium',
   dmzbaFDDoYwXrX7Fa5mT2SfLapMZD8dynXPH4JviFEmMQz9Fu: 'bwarelabs-collator-a',
   dmuuG83f3JeXBmMp7e3XssJzq7rUAuNgAT3z7HoUPWueqpD1V: 'lh',
@@ -179,9 +186,8 @@ const nick = {
   dmvVY24KwgNwoYnHw5EbC8mTUF9CtZeJzCnSGBawWzaRkNHH4: 'lets_node',
   dmyhNFR1qUuA8efaYvpW75qGKrYfzrK8ejygttHojeL4ujzUb: '🧊Iceberg Nodes🧊 | C1',
   dmu7ke7UqHb9oh4zbA9z7sUe9SjTEqqXyWF39dXva2aBuYyDR: 'CertHum',
-  dmz8r5YJUBZp4zc5RbhBYQHCNAxN2WnfPUkMhDyqmMLTfK31E: 'P2P_ORG_1',
   dmzE9ZpFEiZMYTJ5JTcnhUxVenjpoKgEVNsRe3wHULui4XA44: 'ERN VENTURES',
-  dmvPeJ8vK8TDkDHZUbcgd1ceGWDd5PDhzb4tnAho3FBBV3xXX: 'Masternode24.de',
+  dmz8r5YJUBZp4zc5RbhBYQHCNAxN2WnfPUkMhDyqmMLTfK31E: 'P2P_ORG_1',
 };
 
 const toDecimal = (amount) => {
