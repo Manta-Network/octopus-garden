@@ -1,30 +1,33 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import ProgressBar from 'react-bootstrap/ProgressBar';
 import Spinner from 'react-bootstrap/Spinner';
 import Identicon from '@polkadot/react-identicon';
 
 const BondRenderer = (props) => {
-  const { amount } = props;
-  const title = (amount >= 4000000)
-    ? 'this collator meets the minimum bond requirement for permissionless collation'
-    : (amount > 400000)
-      ? 'this collator is working towards meeting the minimum bond requirement for permissionless collation'
+  const { amount, highest } = props;
+  const title = ((BigInt(amount) / BigInt(10 ** 12)) >= 4000000)
+    ? 'this collator meets or exceeds the minimum bond requirement for permissionless collation'
+    : ((BigInt(amount) / BigInt(10 ** 12)) === 4000000)
+      ? 'this collator meets the minimum bond requirement for permissionless collation'
       : 'this collator does not meet the minimum bond requirement for permissionless collation';
   return (
-    <span title={ title }>
-      {new Intl.NumberFormat().format(amount)} {
-        (amount >= 4000000)
-          ? '✅'
-          : (amount > 400000)
-            ? '🛠️'
-            : '⚠️'
+    <ProgressBar
+      now={((amount / highest) * 100)}
+      title={`${new Intl.NumberFormat().format((BigInt(amount) / BigInt(10 ** 12)))} - ${title}`}
+      className={
+        ((BigInt(amount) / BigInt(10 ** 12)) >= 4000000)
+          ? 'lime'
+          : ((BigInt(amount) / BigInt(10 ** 12)) > 400000)
+            ? 'amber'
+            : 'red'
       }
-    </span>
+    />
   );
 };
 
 function CollatorSummary(props) {
-  const { account, nick, stake, collating, selected, session, info, blocks, score, sort } = props;
+  const { account, nick, stake, collating, selected, session, info, blocks, score, sort, highestBond } = props;
   //const [focus, setFocus] = useState(false);
   const [balance, setBalance] = useState({});
   const [blockReward, setBlockReward] = useState(0);
@@ -83,7 +86,7 @@ function CollatorSummary(props) {
           : null
       }
       <td style={{ textAlign: 'right' }}>
-        <BondRenderer amount={(BigInt(info.bond) / BigInt(1000000000000))} />
+        <BondRenderer amount={info.bond} highest={highestBond} />
       </td>
       <td style={{ textAlign: 'right' }}>
         {

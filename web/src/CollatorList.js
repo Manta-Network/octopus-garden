@@ -21,6 +21,7 @@ ChartJS.register(
 
 function CollatorList() {
   const [collators, setCollators] = useState(undefined);
+  const [collatorSummaryProps, setCollatorSummaryProps] = useState({});
   const [sort, setSort] = useState({ column: 'account', ascending: true });
   const [blockHeight, setBlockHeight] = useState(undefined);
   const [chartArgs, setChartArgs] = useState(undefined);
@@ -43,6 +44,9 @@ function CollatorList() {
               };
             }).sort((a, b) => (a.sort > b.sort) ? 1 : (a.sort < b.sort) ? -1 : 0).reverse();
             setBlockHeight(collators.map(c => c.sort).reduce((a, b) => Math.max(a, b), -Infinity));
+            setCollatorSummaryProps({
+              highestBond: Math.max(...collators.map((c) => c.info.bond)),
+            });
             setCollators(collators);
             // red: #ff0000, amber: #ffbf00, green: #32cd32
             setChartArgs({
@@ -152,7 +156,7 @@ function CollatorList() {
                     </tr>
                   </thead>
                   <tbody>
-                    { collators.map((collator, cI) => (<CollatorSummary key={collator.account} {...collator} />)) }
+                    { collators.map((collator, cI) => (<CollatorSummary key={collator.account} {...{...collator, ...collatorSummaryProps}} />)) }
                   </tbody>
                 </Table>
               )
