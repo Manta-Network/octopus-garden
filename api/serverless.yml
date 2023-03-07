@@ -152,7 +152,6 @@ functions:
           path: staking/round
           method: get
           cors: true
-
   bonds:
     timeout: 29
     handler: collation.bonds
