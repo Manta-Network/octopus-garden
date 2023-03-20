@@ -14,6 +14,7 @@ import ProgressBar from 'react-bootstrap/ProgressBar';
 
 import Collator from './Collator';
 import CollatorList from './CollatorList';
+import CollatorStats from './CollatorStats';
 import Maintenance from './Maintenance';
 
 function App() {
@@ -82,6 +83,7 @@ function App() {
       <Row>
         <Routes>
           <Route path='/' element={ <CollatorList /> } />
+          <Route path='/stats' element={ <CollatorStats /> } />
           <Route path='/collator/:account' element={ <Collator current={round} /> } />
           <Route path='/collator/:account/:start/:end' element={ <Collator current={round} /> } />
         </Routes>

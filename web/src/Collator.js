@@ -9,6 +9,7 @@ import Row from 'react-bootstrap/Row';
 import Spinner from 'react-bootstrap/Spinner';
 import Table from 'react-bootstrap/Table';
 import Identicon from '@polkadot/react-identicon';
+import randomColor from './randomColor';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -32,15 +33,6 @@ ChartJS.register(
 
 const kmaFormatter = new Intl.NumberFormat('default', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 const kmaDecimalFormatter = new Intl.NumberFormat('default', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-const randomColor = () => {
-    var letters = '0123456789ABCDEF'.split('');
-    var color = '#';
-    for (let i = 0; i < 6; i++ ) {
-      color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
-}
 
 const roundPeriod = (currentRound, roundNumber) => {
   const currentRoundStartTime = new Date(Date.now() - ((currentRound.latest - currentRound.first) * 12000));
