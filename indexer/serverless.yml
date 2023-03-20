@@ -1,0 +1,76 @@
+service: calamari-indexer
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  stage: prod
+  profile: pelagos-service
+  region: eu-central-1
+  lambdaHashingVersion: 20201221
+  iam:
+    role:
+      name: calamari-indexer
+      # https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-access.html
+      statements:
+        -
+          Effect: Allow
+          Action:
+            - 'ssm:DescribeParameters'
+          Resource: '*'
+        -
+          Effect: Allow
+          Action:
+            - 'ssm:GetParameter'
+          Resource: 'arn:aws:ssm:eu-central-1::parameter/octopus_garden_*'
+
+plugins:
+  - serverless-offline
+useDotenv: true
+
+package:
+  excludeDevDependencies: true
+  
+custom:
+  serverless-layers:
+    functions:
+      - block
+    dependenciesPath: ./X509-cert-7650484215012813007.pem
+
+functions:
+  author:
+    handler: handler.author
+    timeout: 29
+    environment:
+      subscan_api_key: ${ssm:/octopus_garden_subscan_api_key}
+      db_readwrite: ${ssm:/octopus_garden_db_readwrite}
+    events:
+      -
+        schedule:
+          name: kusama-calamari-block-includer
+          description: include missing blocks for the calamari on kusama blockchain in atlas
+          rate: rate(1 minute)
+  block:
+    handler: handler.block
+    timeout: 29
+    environment:
+      subscan_api_key: ${ssm:/octopus_garden_subscan_api_key}
+      db_readwrite: ${ssm:/octopus_garden_db_readwrite}
+    events:
+      -
+        schedule:
+          name: kusama-calamari-block-indexer
+          description: index blocks for the calamari on kusama blockchain in atlas
+          rate: rate(1 minute)
+  dedupe:
+    handler: handler.dedupe
+    timeout: 29
+    environment:
+      db_readwrite: ${ssm:/octopus_garden_db_readwrite}
+    events:
+      -
+        schedule:
+          name: kusama-calamari-block-dedupe
+          description: dedupe blocks for the calamari on kusama blockchain in atlas
+          rate: rate(1 hour)
