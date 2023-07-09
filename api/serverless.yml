@@ -161,3 +161,34 @@ functions:
           path: bonds
           method: get
           cors: true
+  candidatePoolAtBlock:
+    timeout: 29
+    environment:
+      octopus_garden_db_read: ${ssm:/octopus_garden_db_read}
+    handler: collation.candidatePoolAtBlock
+    events:
+      -
+        http:
+          path: collators/at/{block}
+          method: get
+          cors: true
+          request:
+            parameters:
+               paths:
+                 block: true
+  stats:
+    timeout: 29
+    environment:
+      octopus_garden_db_read: ${ssm:/octopus_garden_db_read}
+    handler: collation.stats
+    events:
+      -
+        http:
+          path: stats/{start}/{end}
+          method: get
+          cors: true
+          request:
+            parameters:
+               paths:
+                 start: true
+                 end: true

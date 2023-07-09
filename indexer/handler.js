@@ -42,6 +42,7 @@ const chunk = (list, size) => {
   return result;
 };
 
+
 export const getMissingBlockInfo = async (api) => {
   const [
     parachainStakingRound,

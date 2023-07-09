@@ -99,11 +99,11 @@ const syncRound = async (api, collection, roundNumber, firstBlockNumber, lastBlo
         const lastBlockNumber = (roundNumber === lastRoundNumber)
           ? lastEverBlockNumber
           : firstBlockNumber + roundLength;
-        await syncRound(api, collection, roundNumber, firstBlockNumber, lastBlockNumber).catch(console.dir);
+        await syncRound(api, collection, roundNumber, firstBlockNumber, lastBlockNumber);
       }/* else {
         console.log(`round: ${roundNumber}, skipped: true`);
       }*/
     }
-    await new Promise(r => setTimeout(r, 3000));
+    await new Promise(r => setTimeout(r, 2000));
   };
 })()

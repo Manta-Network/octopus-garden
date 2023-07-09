@@ -145,6 +145,57 @@ const fetchCandidateSummary = async (account, start, end) => {
   }
   return cache[cacheKey].value;
 };
+const calamariZero = Date.parse('16 Sep 2021 07:35:00 GMT');
+
+const fetchStats = async (start, end) => {
+  const db = await connectToDatabase('kusama-calamari');
+  const stats = (await db.collection('block').aggregate([
+    {
+      $match: {
+        collator: {
+          $exists: true
+        },
+        ...(start < 100000000) && {
+          number: {
+            $gte: start,
+            $lte: end,
+          }
+        },
+        ...(start > 100000000) && {
+          timestamp: {
+            $gte: new Date(start),
+            $lte: new Date(end),
+          }
+        },
+      }
+    },
+    {
+      $group: {
+        _id: '$collator',
+        firstBlock: { $min: '$number' },
+        firstTimestamp: { $min: '$timestamp' },
+        lastBlock: { $max: '$number' },
+        lastTimestamp: { $max: '$timestamp' },
+        totalBlocks: { $sum: 1 },
+      }
+    },
+  ]).toArray())
+    .map((x) => ({
+      collator: x._id,
+      first: {
+        number: x.firstBlock,
+        timestamp: (x.firstTimestamp < calamariZero) ? new Date(x.firstTimestamp * 1000) : new Date(x.firstTimestamp),
+      },
+      last: {
+        number: x.lastBlock,
+        timestamp: (x.lastTimestamp < calamariZero) ? new Date(x.lastTimestamp * 1000) : new Date(x.lastTimestamp),
+      },
+      total: x.totalBlocks
+    }))
+    .sort((a, b) => (a.total > b.total) ? 1 : (a.total < b.total) ? -1 : 0)
+    .reverse();
+  return stats;
+};
 
 const nick = {
   dmxjZSec4Xj3xz3nBEwSHjQSnRGhvcoB4eRabkiw7pSDuv8fW: '🦑🛡️ c1 🛡️🦑',
@@ -152,47 +203,50 @@ const nick = {
   dmxvivs72h11DBNyKbeF8KQvcksoZsK9uejLpaWygFHZ2fU9z: '🦑🛡️ c3 🛡️🦑',
   dmyhGnuox8ny9R1efVsWKxNU2FevMxcPZaB66uEJqJhgC4a1W: '🦑🛡️ c4 🛡️🦑',
   dmzbLejekGYZmfo5FoSznv5bBik7vGowuLxvzqFs2gZo2kANh: '🦑🛡️ c5 🛡️🦑',
-  dmvPeJ8vK8TDkDHZUbcgd1ceGWDd5PDhzb4tnAho3FBBV3xXX: 'Masternode24.de',
-  dmxa3MJczFGT92BUQjwsxguUC2t5qFaDdagfpBQWdGkNPJYQ5: 'Anonstake',
-  dmwJT8yMLRzTPcNspYMvY6Cmjk7Nh6SNqsS99ykxyWF6MRpuK: 'PlusReward',
-  dmup6erAb8iJHQ2UXyHkA1G6m1hnSLRM55PdSD7DDbN1Ww4ZN: 'Validatrium',
-  dmzbaFDDoYwXrX7Fa5mT2SfLapMZD8dynXPH4JviFEmMQz9Fu: 'bwarelabs-collator-a',
-  dmuuG83f3JeXBmMp7e3XssJzq7rUAuNgAT3z7HoUPWueqpD1V: 'lh',
-  dmy6WPM2KfD7WBxJYS6UG17GHJVCv8kewiwTr6ciVeXLbBpvf: 'CrypTech',
-  dmvFayQJ9S7BgbHE2kmnoVq9UfdbfwHpZ4d1revJfVA6X9dGR: 'SeaFoodShop',
+  dmu7ke7UqHb9oh4zbA9z7sUe9SjTEqqXyWF39dXva2aBuYyDR: 'CertHum',
   dmu7rmwTa35Ec5cnNMpn8EpnFPA727sDtpCQwu9uCo2sfnmg1: 'черно море',
+  dmuaG34aVnxirpMsHXu6Mg7RxNN3cxG74ZyjLVEgvzNqBXm2U: 'SunshineAutosKma',
+  dmuazX1JVi1XSd3g7ifaQQnJpodUfmbJVgqP8LXvgXBnsPGtA: 'calamari-bitManna',
+  dmuomPgt6hJzKpDcEbz2BNNo9uPFXDvzBk7vnLQx6TLBQG85L: 'nettle',
+  dmup6erAb8iJHQ2UXyHkA1G6m1hnSLRM55PdSD7DDbN1Ww4ZN: 'Validatrium',
+  dmuPiPzqGwuKsik8XLLPPi2xHCEwADyrfxakgiQbjtYEh7bDy: 'kooltek68',
+  dmuuG83f3JeXBmMp7e3XssJzq7rUAuNgAT3z7HoUPWueqpD1V: 'lh',
+  dmvDkJ2ti4WxdtmhuYfNCdHyfGbs44QE7m8Q2vqWPQ3vgcdaG: 'NRD Labs',
+  dmvFayQJ9S7BgbHE2kmnoVq9UfdbfwHpZ4d1revJfVA6X9dGR: 'SeaFoodShop',
+  dmvoKqM8n2PVKyiYhm5VpMMnzMdk1z1WZAYDJEDmSLSqRgrbQ: 'Polkadotters',
+  dmvPeJ8vK8TDkDHZUbcgd1ceGWDd5PDhzb4tnAho3FBBV3xXX: 'Masternode24.de',
+  dmvPNCD8YaHusmrdtvpB6HG72BibVSpnbHugT893x4Hw9P186: 'STAKECRAFT',
   dmvuGKcNe4VEv1rBVcTFEavAsccciEXcWoEi5iQrdR1NNMD1w: 'orange skies',
-  dmx4WhyUDhAjsMf1mRD55qApjxnqSXcSsmweHgcv8seGkrN4R: 'staker-space',
-  dmyZopEVaerkgSWWTd4WScPkhQgHTeLfMcHVCkQUyL1gu29c3: 'mini rocket',
-  dmzWDne3MxniVDcF4i2nGkfPZa4pfkWL1AXqgSvWgZmDoTcYw: 'StakeBaby Calamari WS',
-  dmx7NaUig7rdhwTJcnj6VPFaeou4KsvTqkMTcvHz25LcZtNrT: 'Brightlystake',
-  dmzEUqQGSWsFewzpomYcjhLYkeSAvHYwEoKzG2yXcF8YQoJkL: 'MARJA',
+  dmvvqrfK5AUYH294zTCCiimJRV7CQDDQyC7RAkd5aZgUn9S6f: '255 DAO',
+  dmvVY24KwgNwoYnHw5EbC8mTUF9CtZeJzCnSGBawWzaRkNHH4: 'lets_node',
+  dmwJT8yMLRzTPcNspYMvY6Cmjk7Nh6SNqsS99ykxyWF6MRpuK: 'PlusReward',
   dmwM2xeWD2BjmCVYddTjB8QyYsktPsx2gySEZYbpdKFNnSGKd: 'FULLSTACK',
+  dmx4WhyUDhAjsMf1mRD55qApjxnqSXcSsmweHgcv8seGkrN4R: 'staker-space',
+  dmx7NaUig7rdhwTJcnj6VPFaeou4KsvTqkMTcvHz25LcZtNrT: 'Brightlystake',
+  dmxa3MJczFGT92BUQjwsxguUC2t5qFaDdagfpBQWdGkNPJYQ5: 'Anonstake',
   dmxbgDpKK6V3Sayr3jz8MpoUJyxiWese6FtL42RRfZXnWewTD: 'ACV|TEAM',
   dmxyqP33GNwS6mA8bsWHQjeyKJM2eUVeCueER44b254ZCMy23: 'TopShot',
+  dmy6WPM2KfD7WBxJYS6UG17GHJVCv8kewiwTr6ciVeXLbBpvf: 'CrypTech',
   dmycXK86XZfJV8CuJWoufuY3wq5mnRwhzQmsfQjDvNypyrUDM: 'Ketchup',
-  dmzh2ESTJAy1MJ8Ekg9zs1653HFBUqCQeErihJZSHfFXGgNUh: 'Insight Finance',
-  dmuomPgt6hJzKpDcEbz2BNNo9uPFXDvzBk7vnLQx6TLBQG85L: 'nettle',
   dmyEgR9K8hsgqt47XYnDDJJMaXgHnPLVjTFW8nfRa2RKoj17U: 'TheMilkyWayGang',
-  dmvPNCD8YaHusmrdtvpB6HG72BibVSpnbHugT893x4Hw9P186: 'STAKECRAFT',
   dmyhGCWjejSyze6Hcqx43f8PNR9RWwm4EEobo8HehtBb8W8aU: 'CJ Calamari',
-  dmuPiPzqGwuKsik8XLLPPi2xHCEwADyrfxakgiQbjtYEh7bDy: 'kooltek68',
-  dmvvqrfK5AUYH294zTCCiimJRV7CQDDQyC7RAkd5aZgUn9S6f: '255 DAO',
-  dmvoKqM8n2PVKyiYhm5VpMMnzMdk1z1WZAYDJEDmSLSqRgrbQ: 'Polkadotters',
-  dmz1cxDw6nC5impJMZVfDwve5AG2s5AeaqSkZvQnEuqVwLYnL: 'pithecus-calamari-john316',
-  dmuazX1JVi1XSd3g7ifaQQnJpodUfmbJVgqP8LXvgXBnsPGtA: 'calamari-bitManna',
-  dmuaG34aVnxirpMsHXu6Mg7RxNN3cxG74ZyjLVEgvzNqBXm2U: 'SunshineAutosKma',
-  dmyxfU1bJM5UR5RWsypKm9KQDkVofm3ifp5gVjzs8uQHUmBZb: 'pathrocknetwork',
-  dmvVY24KwgNwoYnHw5EbC8mTUF9CtZeJzCnSGBawWzaRkNHH4: 'lets_node',
   dmyhNFR1qUuA8efaYvpW75qGKrYfzrK8ejygttHojeL4ujzUb: '🧊Iceberg Nodes🧊 | C1',
-  dmu7ke7UqHb9oh4zbA9z7sUe9SjTEqqXyWF39dXva2aBuYyDR: 'CertHum',
-  dmzE9ZpFEiZMYTJ5JTcnhUxVenjpoKgEVNsRe3wHULui4XA44: 'ERN VENTURES',
+  dmyxfU1bJM5UR5RWsypKm9KQDkVofm3ifp5gVjzs8uQHUmBZb: 'pathrocknetwork',
+  dmyZopEVaerkgSWWTd4WScPkhQgHTeLfMcHVCkQUyL1gu29c3: 'mini rocket',
+  dmz1cxDw6nC5impJMZVfDwve5AG2s5AeaqSkZvQnEuqVwLYnL: 'pithecus-calamari-john316',
   dmz8r5YJUBZp4zc5RbhBYQHCNAxN2WnfPUkMhDyqmMLTfK31E: 'P2P_ORG_1',
+  dmzbaFDDoYwXrX7Fa5mT2SfLapMZD8dynXPH4JviFEmMQz9Fu: 'bwarelabs-collator-a',
+  dmzE9ZpFEiZMYTJ5JTcnhUxVenjpoKgEVNsRe3wHULui4XA44: 'ERN VENTURES',
+  dmzEUqQGSWsFewzpomYcjhLYkeSAvHYwEoKzG2yXcF8YQoJkL: 'MARJA',
+  dmzh2ESTJAy1MJ8Ekg9zs1653HFBUqCQeErihJZSHfFXGgNUh: 'Insight Finance',
+  dmzWDne3MxniVDcF4i2nGkfPZa4pfkWL1AXqgSvWgZmDoTcYw: 'StakeBaby Calamari WS',
 };
 
 const toDecimal = (amount) => {
   return (Number(BigInt(amount) * BigInt(10 ** 6) / BigInt(10 ** 12)) / (10 ** 6))
 };
+
+const firstNimbusBlock = 2196747;
 
 module.exports.list = async (event) => {
   const response = {
@@ -420,5 +474,90 @@ module.exports.bonds = async (event) => {
     response.body = JSON.stringify({ error }, null, 2);
     console.error(error);
   }
+  return response;
+};
+
+module.exports.candidatePoolAtBlock = async (event) => {
+  const blockNumber = parseInt(event.pathParameters.block);
+  const response = {
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Credentials': true,
+      'Content-Type': 'application/json',
+    },
+  };
+  const consensus = (blockNumber >= firstNimbusBlock) ? 'nimbus' : 'aura';
+  try {
+    const api = await ApiPromise.create({ provider: wsProvider });
+    await api.isReady;
+    switch (consensus) {
+      case 'nimbus':
+        const nimbusBlockHash = await api.rpc.chain.getBlockHash(blockNumber);
+        const [
+          nimbusApi,
+          nimbusHeader,
+        ] = await Promise.all([
+          api.at(nimbusBlockHash),
+          api.derive.chain.getHeader(nimbusBlockHash),
+        ]);
+        await nimbusApi.isReady;
+        response.body = JSON.stringify(
+          {
+            block: {
+              number: blockNumber,
+              hash: nimbusBlockHash,
+              author: JSON.parse(JSON.stringify(nimbusHeader.digest.logs))[0].preRuntime[1],
+            },
+            collators: (await nimbusApi.query.parachainStaking.candidatePool()).map((x) => ({
+              collator: x.owner,
+              bond: toDecimal(x.amount),
+            })),
+          },
+          null,
+          2
+        );
+        break;
+      case 'aura':
+        const auraBlockHash = await api.rpc.chain.getBlockHash(blockNumber);
+        const auraApi = await api.at(auraBlockHash);
+        await auraApi.isReady;
+        response.body = JSON.stringify(
+          {
+            block: {
+              number: blockNumber,
+              hash: auraBlockHash,
+              author: (await api.derive.chain.getHeader(auraBlockHash)).author,
+            },
+            collators: (await auraApi.query.session.validators()).map((x) => ({
+              collator: x,
+            })),
+          },
+          null,
+          2
+        );
+        break;
+      default:
+    }
+    response.statusCode = 200;
+  } catch (error) {
+    response.statusCode = 500;
+    response.body = JSON.stringify({ error }, null, 2);
+    console.error(error);
+  }
+  return response;
+};
+
+module.exports.stats = async (event) => {
+  const start = parseInt(event.pathParameters.start);
+  const end = parseInt(event.pathParameters.end);
+  const response = {
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Credentials': true,
+      'Content-Type': 'application/json',
+    },
+  };
+  const stats = await fetchStats(start, end);
+  response.body = JSON.stringify({ stats }, null, 2 );
   return response;
 };
