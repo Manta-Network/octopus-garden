@@ -12,10 +12,10 @@ const uri = {
     source: '$external',
   },
   tls: 'true',
-  cert: `/etc/ssl/mongod.pem`,
-  ca: `/etc/ssl/dst-root-x3.pem`,
+  cert: '/etc/ssl/mongod.pem',
+  ca: '/etc/ssl/dst-root-x3.pem',
 };
-const client = new MongoClient(`${uri.scheme}://${uri.host}/${uri.database}?authMechanism=${uri.auth.mechanism}&authSource=${encodeURIComponent(uri.auth.source)}&tls=${uri.tls}&tlsCertificateKeyFile=${encodeURIComponent(uri.cert)}&tlsCAFile=${encodeURIComponent(mongoUri.ca)}`);
+const client = new MongoClient(`${uri.scheme}://${uri.host}/${uri.database}?authMechanism=${uri.auth.mechanism}&authSource=${encodeURIComponent(uri.auth.source)}&tls=${uri.tls}&tlsCertificateKeyFile=${encodeURIComponent(uri.cert)}&tlsCAFile=${encodeURIComponent(uri.ca)}`);
 //const client = new MongoClient(`mongodb://localhost:27017`);
 const range = (start, end) => Array.from({length: (end - start)}, (v, k) => k + start);
 const randomInt = (min, max) => {
