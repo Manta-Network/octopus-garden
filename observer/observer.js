@@ -2,17 +2,18 @@ import { Worker } from 'worker_threads';
 import { MongoClient } from 'mongodb';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 const mongoUri = {
-  scheme: 'mongodb+srv',
-  host: 'chaincluster.oulrzox.mongodb.net',
+  scheme: 'mongodb',
+  host: 'alpha.temujin.pelagos.systems:27017,beta.temujin.pelagos.systems:27017,gamma.temujin.pelagos.systems:27017',
   database: 'kusama-calamari',
   auth: {
     mechanism: 'MONGODB-X509',
     source: '$external',
   },
   tls: 'true',
-  cert: `${process.env.HOME}/.mongodb/X509-cert-7650484215012813007.pem`,
+  cert: `/etc/ssl/mongod.pem`,
+  ca: `/etc/ssl/dst-root-x3.pem`,
 };
-const mongoClient = new MongoClient(`${mongoUri.scheme}://${mongoUri.host}/${mongoUri.database}?authMechanism=${mongoUri.auth.mechanism}&authSource=${encodeURIComponent(mongoUri.auth.source)}&tls=${mongoUri.tls}&tlsCertificateKeyFile=${encodeURIComponent(mongoUri.cert)}`);
+const mongoClient = new MongoClient(`${mongoUri.scheme}://${mongoUri.host}/${mongoUri.database}?authMechanism=${mongoUri.auth.mechanism}&authSource=${encodeURIComponent(mongoUri.auth.source)}&tls=${mongoUri.tls}&tlsCertificateKeyFile=${encodeURIComponent(mongoUri.cert)}&tlsCAFile=${encodeURIComponent(mongoUri.ca)}`);
 const db = mongoClient.db(mongoUri.database);
 const rewardCollection = db.collection('reward');
 //const wsUri = 'wss://ws.archive.calamari.systems';

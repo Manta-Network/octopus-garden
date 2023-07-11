@@ -42,7 +42,7 @@ const syncRoundRewards = async (rewardedRoundNumber, mongoUri) => {
   //parentPort.postMessage(`rewarded round: ${rewardedRoundNumber}, payout round: ${payoutRoundNumber}`);
   const api = await ApiPromise.create({ provider: new WsProvider('wss://ws.archive.calamari.systems') });
   await api.isReady;
-  const mongoClient = new MongoClient(`${mongoUri.scheme}://${mongoUri.host}/${mongoUri.database}?authMechanism=${mongoUri.auth.mechanism}&authSource=${encodeURIComponent(mongoUri.auth.source)}&tls=${mongoUri.tls}&tlsCertificateKeyFile=${encodeURIComponent(mongoUri.cert)}`);
+  const mongoClient = new MongoClient(`${mongoUri.scheme}://${mongoUri.host}/${mongoUri.database}?authMechanism=${mongoUri.auth.mechanism}&authSource=${encodeURIComponent(mongoUri.auth.source)}&tls=${mongoUri.tls}&tlsCertificateKeyFile=${encodeURIComponent(mongoUri.cert)}&tlsCAFile=${encodeURIComponent(mongoUri.ca)}`);
   const db = mongoClient.db(mongoUri.database);
   const rewardCollection = db.collection('reward');
   const roundCollection = db.collection('round');
