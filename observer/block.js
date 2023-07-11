@@ -16,7 +16,6 @@ const uri = {
   ca: '/etc/ssl/ca.pem',
 };
 const client = new MongoClient(`${uri.scheme}://${uri.host}/${uri.database}?authMechanism=${uri.auth.mechanism}&authSource=${encodeURIComponent(uri.auth.source)}&tls=${uri.tls}&tlsCertificateKeyFile=${encodeURIComponent(uri.cert)}&tlsCAFile=${encodeURIComponent(uri.ca)}`);
-//const client = new MongoClient(`mongodb://localhost:27017`);
 const range = (start, end) => Array.from({length: (end - start)}, (v, k) => k + start);
 const randomInt = (min, max) => {
   min = Math.ceil(min);
