@@ -10,7 +10,7 @@ const mongoUri = {
     source: '$external',
   },
   tls: 'true',
-  cert: `/etc/ssl/mongod.pem`,
+  cert: '/etc/ssl/key+chain.pem',
   ca: `/etc/ssl/dst-root-x3.pem`,
 };
 const mongoClient = new MongoClient(`${mongoUri.scheme}://${mongoUri.host}/${mongoUri.database}?authMechanism=${mongoUri.auth.mechanism}&authSource=${encodeURIComponent(mongoUri.auth.source)}&tls=${mongoUri.tls}&tlsCertificateKeyFile=${encodeURIComponent(mongoUri.cert)}&tlsCAFile=${encodeURIComponent(mongoUri.ca)}`);
