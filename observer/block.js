@@ -41,13 +41,13 @@ const provider = new WsProvider('wss://ws.archive.calamari.systems');
         ).toArray()) || [];
         const blocks = range(firstBlockInRound, (lastBlockInRound + 1));
         const missing = blocks.filter(b => !dbBlocks.find(x=>x.number===b)).map((number) => ({ number, round: roundNumber }));
-        console.log({
+        console.log(JSON.stringify({
           round: roundNumber,
           first: firstBlockInRound,
           last: lastBlockInRound,
           count: (lastBlockInRound - firstBlockInRound),
           missing: missing.length,
-        });
+        }));
         for (let mI = missing.length - 1; mI >= 0; mI--) {
           const hash = await api.rpc.chain.getBlockHash(missing[mI].number);
           const header = await api.derive.chain.getHeader(hash);
