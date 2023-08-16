@@ -2,36 +2,17 @@
 
 import { MongoClient } from 'mongodb';
 import { ApiPromise, WsProvider } from '@polkadot/api';
-const uri = {
-  scheme: 'mongodb',
-  host: 'alpha.temujin.pelagos.systems:27017,beta.temujin.pelagos.systems:27017,gamma.temujin.pelagos.systems:27017',
-  database: 'kusama-calamari',
-  collection: 'round',
-  auth: {
-    mechanism: 'MONGODB-X509',
-    source: '$external',
-  },
-  tls: 'true',
-  cert: '/etc/ssl/key+chain.pem',
-  ca: `/etc/ssl/dst-root-x3.pem`,
-};
-const client = new MongoClient(`${uri.scheme}://${uri.host}/${uri.database}?authMechanism=${uri.auth.mechanism}&authSource=${encodeURIComponent(uri.auth.source)}&tls=${uri.tls}&tlsCertificateKeyFile=${encodeURIComponent(uri.cert)}&tlsCAFile=${encodeURIComponent(uri.ca)}`);
-//const client = new MongoClient(`mongodb://localhost:27017`);
-const range = (start, end) => Array.from({length: (end - start)}, (v, k) => k + start);
-const randomInt = (min, max) => {
-  min = Math.ceil(min);
-  max = Math.floor(max);
-  return Math.floor(Math.random() * (max - min) + min);
-}
+import { temujin } from './constants.js';
+import { randomInt, range } from './utils.js';
+
+const client = new MongoClient(`${temujin.scheme}://${temujin.host}/${temujin.database}?authMechanism=${temujin.auth.mechanism}&authSource=${encodeURIComponent(temujin.auth.source)}&tls=${temujin.tls}&tlsCertificateKeyFile=${encodeURIComponent(temujin.cert)}&tlsCAFile=${encodeURIComponent(temujin.ca)}`);
 
 const provider = new WsProvider('wss://ws.archive.calamari.systems');
-//const provider = new WsProvider(`wss://a${randomInt(1, 5)}.calamari.systems`);
-
 
 (async () => {
   const api = await ApiPromise.create({ provider });
   await api.isReady;
-  const collection = client.db(uri.database).collection(uri.collection);
+  const collection = client.db(temujin.database).collection('round');
   for (let o = 0; o < Infinity; o++) {
     try {
       const observedRounds = ((await collection.find({}, { projection: { _id: false, number: true } }).toArray()) || []).map(r=>r.number);
@@ -47,7 +28,7 @@ const provider = new WsProvider('wss://ws.archive.calamari.systems');
       const rounds = range(1, currentRound).reverse();
       for (let number = currentRound; number > 0; number--) {
         if (observedRounds.includes(number)) {
-          console.log(`iteration ${o}: skipping previously observed round ${number}`);
+          //console.log(`iteration ${o}: skipping previously observed round ${number}`);
           continue;
         }
         const first = (firstBlockInCurrentRound - ((currentRound - number) * roundLength));
@@ -90,10 +71,11 @@ const provider = new WsProvider('wss://ws.archive.calamari.systems');
           update,
         });
       }
+      console.log(`iteration ${o}: checked rounds 1 through ${currentRound}`);
     } catch (error) {
       console.error(error);
     }
     console.log(`iteration ${o}: sleeping for a minute...`);
     await new Promise(r => setTimeout(r, 60000));
   }
-})()
+})();
