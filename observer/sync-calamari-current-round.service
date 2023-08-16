@@ -14,7 +14,7 @@ ExecStartPre=mkdir -p /home/grenade/.local/bin
 #ExecStartPre=/usr/bin/npm config set prefix '/home/grenade/.local/'
 #ExecStartPre=/usr/bin/npm install --global yarn
 ExecStartPre=/home/grenade/.local/bin/yarn --cwd /home/grenade/git/Manta-Network/octopus-garden/observer
-ExecStart=/usr/bin/node /home/grenade/git/Manta-Network/octopus-garden/observer/index.js
+ExecStart=/usr/bin/node /home/grenade/git/Manta-Network/octopus-garden/observer/blockInCurrentRound.js
 Restart=always
 RestartSec=10
 
