@@ -45,6 +45,7 @@ const provider = new WsProvider('wss://ws.archive.calamari.systems');
           round: roundNumber,
           first: firstBlockInRound,
           last: lastBlockInRound,
+          count: (lastBlockInRound - firstBlockInRound),
           missing: missing.length,
         });
         for (let mI = missing.length - 1; mI >= 0; mI--) {
