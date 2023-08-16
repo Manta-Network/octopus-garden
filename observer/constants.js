@@ -1,7 +1,6 @@
 export const temujin = {
   scheme: 'mongodb',
   host: 'alpha.temujin.pelagos.systems:27017,beta.temujin.pelagos.systems:27017,gamma.temujin.pelagos.systems:27017',
-  database: 'kusama-calamari',
   auth: {
     mechanism: 'MONGODB-X509',
     source: '$external',

@@ -5,14 +5,15 @@ import { ApiPromise, WsProvider } from '@polkadot/api';
 import { temujin } from './constants.js';
 import { randomInt, range } from './utils.js';
 
-const client = new MongoClient(`${temujin.scheme}://${temujin.host}/${temujin.database}?authMechanism=${temujin.auth.mechanism}&authSource=${encodeURIComponent(temujin.auth.source)}&tls=${temujin.tls}&tlsCertificateKeyFile=${encodeURIComponent(temujin.cert)}&tlsCAFile=${encodeURIComponent(temujin.ca)}`);
-
+const databaseName = 'kusama-calamari';
+const collectionName = 'round';
+const client = new MongoClient(`${temujin.scheme}://${temujin.host}/${databaseName}?authMechanism=${temujin.auth.mechanism}&authSource=${encodeURIComponent(temujin.auth.source)}&tls=${temujin.tls}&tlsCertificateKeyFile=${encodeURIComponent(temujin.cert)}&tlsCAFile=${encodeURIComponent(temujin.ca)}`);
 const provider = new WsProvider('wss://ws.archive.calamari.systems');
 
 (async () => {
   const api = await ApiPromise.create({ provider });
   await api.isReady;
-  const collection = client.db(temujin.database).collection('round');
+  const collection = client.db(databaseName).collection(collectionName);
   for (let o = 0; o < Infinity; o++) {
     try {
       const observedRounds = ((await collection.find({}, { projection: { _id: false, number: true } }).toArray()) || []).map(r=>r.number);

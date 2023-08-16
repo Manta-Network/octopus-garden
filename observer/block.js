@@ -2,35 +2,18 @@
 
 import { MongoClient } from 'mongodb';
 import { ApiPromise, WsProvider } from '@polkadot/api';
-const uri = {
-  scheme: 'mongodb',
-  host: 'alpha.temujin.pelagos.systems:27017,beta.temujin.pelagos.systems:27017,gamma.temujin.pelagos.systems:27017',
-  database: 'kusama-calamari',
-  collection: 'block',
-  auth: {
-    mechanism: 'MONGODB-X509',
-    source: '$external',
-  },
-  tls: 'true',
-  cert: '/etc/ssl/key+chain.pem',
-  ca: '/etc/ssl/ca.pem',
-};
-const client = new MongoClient(`${uri.scheme}://${uri.host}/${uri.database}?authMechanism=${uri.auth.mechanism}&authSource=${encodeURIComponent(uri.auth.source)}&tls=${uri.tls}&tlsCertificateKeyFile=${encodeURIComponent(uri.cert)}&tlsCAFile=${encodeURIComponent(uri.ca)}`);
-const range = (start, end) => Array.from({length: (end - start)}, (v, k) => k + start);
-const randomInt = (min, max) => {
-  min = Math.ceil(min);
-  max = Math.floor(max);
-  return Math.floor(Math.random() * (max - min) + min);
-}
+import { temujin } from './constants.js';
+import { randomInt, range } from './utils.js';
 
+const databaseName = 'kusama-calamari';
+const collectionName = 'block';
+const client = new MongoClient(`${temujin.scheme}://${temujin.host}/${databaseName}?authMechanism=${temujin.auth.mechanism}&authSource=${encodeURIComponent(temujin.auth.source)}&tls=${temujin.tls}&tlsCertificateKeyFile=${encodeURIComponent(temujin.cert)}&tlsCAFile=${encodeURIComponent(temujin.ca)}`);
 const provider = new WsProvider('wss://ws.archive.calamari.systems');
-//const provider = new WsProvider(`wss://a${randomInt(1, 5)}.calamari.systems`);
-
 
 (async () => {
   const api = await ApiPromise.create({ provider });
   await api.isReady;
-  const collection = client.db(uri.database).collection(uri.collection);
+  const collection = client.db(databaseName).collection(collectionName);
   while(true) {
     try {
       const [
@@ -41,8 +24,6 @@ const provider = new WsProvider('wss://ws.archive.calamari.systems');
         api.rpc.chain.getHeader(),
       ]);
       const [ firstBlockInCurrentRound, roundLength, currentRound ] = [ 'first', 'length', 'current' ].map((key) => parseInt(round[key], 10));
-      const lastEver = parseInt(lastHeader.number, 10);
-      const rounds = range(1, currentRound).reverse();
       for (let roundNumber = currentRound - 1; roundNumber > 0; roundNumber--) {
         const firstBlockInRound = (firstBlockInCurrentRound - ((currentRound - roundNumber) * roundLength));
         const lastBlockInRound = (firstBlockInRound + roundLength - 1);
