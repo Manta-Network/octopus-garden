@@ -55,11 +55,12 @@ const provider = new WsProvider('wss://ws.archive.calamari.systems');
             author: JSON.parse(JSON.stringify(header.digest.logs))[0].preRuntime[1],
           };
           const update = await collection.updateOne({ number: block.number }, { $set: block }, { upsert: true });
-          console.log(`round: ${block.round}, block: ${block.number} ${block.hash}, author: ${block.author}, upsert: ${(!!update.modifiedCount) ? 'update' : (!!update.upsertedCount) ? 'insert' : 'error'}`);
-          //await new Promise(r => setTimeout(r, 10000));
+          console.log(`round: ${block.round}, block: ${block.number} ${block.hash}, author: ${block.author}, upsert: ${(!!update.modifiedCount) ? 'update' : (!!update.upsertedCount) ? 'insert' : (!!update.acknowledged) ? 'observed' : 'error'}`);
+          if (!update.modifiedCount && !update.upsertedCount && !update.acknowledged) {
+            console.log(JSON.stringify(update));
+          }
         }
       }
-      //await new Promise(r => setTimeout(r, 1000));
     } catch (error) {
       console.error(error);
     }
