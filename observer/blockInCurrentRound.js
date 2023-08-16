@@ -54,9 +54,10 @@ const provider = new WsProvider('wss://ws.archive.calamari.systems');
         };
         const update = await collection.updateOne({ number: block.number }, { $set: block }, { upsert: true });
         console.log(`round: ${block.round}, block: ${block.number} ${block.hash}, author: ${block.author}, upsert: ${(!!update.modifiedCount) ? 'update' : (!!update.upsertedCount) ? 'insert' : 'error'}`);
-        //await new Promise(r => setTimeout(r, 10000));
+        if (!update.modifiedCount && !update.upsertedCount) {
+          console.log(update);
+        }
       }
-      //await new Promise(r => setTimeout(r, 1000));
     } catch (error) {
       console.error(error);
     }
